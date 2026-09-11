@@ -1,4 +1,5 @@
 import { ArrowRight, Bell, ClipboardList, Clock, GitCompareArrows, Globe, Search, Tractor, TrendingUp } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 
 import { ListingCard } from "@/components/listing/listing-card"
@@ -98,16 +99,31 @@ export default async function Home() {
       <ImpressionTracker
         placementIds={homepageSlot?.placementId ? [homepageSlot.placementId] : []}
       />
-      <section className="relative isolate overflow-hidden bg-[#1E4725] px-6 py-20 text-white">
-        <Tractor
-          className="pointer-events-none absolute -right-16 bottom-0 size-104 text-white/10"
-          strokeWidth={0.75}
+      <section className="relative isolate overflow-hidden px-6 py-24 text-white sm:py-28">
+        <Image
+          src="/hero.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
         />
+        {/* Two scrims rather than one flat overlay: the photo's sky is pale
+            exactly where the headline sits, so a left-weighted gradient carries
+            the text contrast while the tractor on the right stays visible. The
+            second layer tints toward the brand green so the darkening does not
+            read as muddy grey. */}
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-black/25"
+        />
+        <div aria-hidden className="absolute inset-0 bg-[#12301A]/35" />
+
         <div className="relative mx-auto flex max-w-6xl flex-col gap-6">
-          <h1 className="max-w-xl text-4xl font-bold leading-tight sm:text-5xl">
+          <h1 className="max-w-xl text-4xl font-bold leading-tight drop-shadow-md sm:text-5xl">
             Find Tractors. <br /> Win More.
           </h1>
-          <p className="max-w-md text-white/80">
+          <p className="max-w-md text-base text-white/90 drop-shadow-sm">
             The most complete source for active and recent tractor auctions across all major
             sites.
           </p>
