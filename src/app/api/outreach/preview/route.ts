@@ -18,12 +18,12 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json().catch(() => null)) as {
     contactId?: string
-    templateId?: string
+    stageId?: string
   } | null
 
-  if (!body?.contactId || !body.templateId) {
+  if (!body?.contactId || !body.stageId) {
     return NextResponse.json(
-      { data: null, error: "contactId and templateId are required" },
+      { data: null, error: "contactId and stageId are required" },
       { status: 400 }
     )
   }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   try {
     const email = await generateOutreachEmail(
       mapOutreachContact(data as Record<string, unknown>),
-      body.templateId
+      body.stageId
     )
     return NextResponse.json({ data: email, error: null })
   } catch (error) {

@@ -175,6 +175,8 @@ export function mapOutreachContact(row: Row): OutreachContact {
     geographic_coverage: optional<string>(row.geographic_coverage),
     inventory_type: optional<string>(row.inventory_type),
     existing_api_info: optional<string>(row.existing_api_info),
+    tier: row.tier === null || row.tier === undefined ? undefined : Number(row.tier),
+    integration_request: optional<string>(row.integration_request),
     status: (optional<string>(row.status) ?? "pending") as OutreachContact["status"],
     outreach_date: optional<string>(row.outreach_date),
     follow_up_date: optional<string>(row.follow_up_date),
@@ -185,15 +187,21 @@ export function mapOutreachContact(row: Row): OutreachContact {
   }
 }
 
-export async function getOutreachContacts(filters: { status?: string; due?: boolean } = {}) {
+export async function getOutreachContacts(
+  filters: { status?: string; due?: boolean; tier?: number } = {}
+) {
   const supabase = createAdminClient()
 
   let query = supabase.from("outreach_contacts").select("*")
 
   if (filters.status) query = query.eq("status", filters.status)
+  if (filters.tier) query = query.eq("tier", filters.tier)
   if (filters.due) query = query.lte("follow_up_date", new Date().toISOString())
 
-  const { data, error } = await query.order("company_name")
+  // Tier order is the work order: Tier 1 first, unranked rows last.
+  const { data, error } = await query
+    .order("tier", { ascending: true, nullsFirst: false })
+    .order("company_name")
 
   if (error) throw new Error(`Failed to load outreach contacts: ${error.message}`)
 

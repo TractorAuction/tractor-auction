@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { OUTREACH_TEMPLATES } from "@/lib/outreach/templates"
+import { OUTREACH_STAGES, resolveAngle } from "@/lib/outreach/templates"
 import type { OutreachContact } from "@/types"
 
 const fieldClass =
@@ -14,13 +14,15 @@ const fieldClass =
 export function OutreachComposer({ contact }: { contact: OutreachContact }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
-  const [templateId, setTemplateId] = useState(OUTREACH_TEMPLATES[0].id)
+  const [stageId, setStageId] = useState(OUTREACH_STAGES[0].id)
   const [subject, setSubject] = useState("")
   const [body, setBody] = useState("")
   const [to, setTo] = useState(contact.contact_email ?? "")
   const [busy, setBusy] = useState<"draft" | "send" | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [sent, setSent] = useState(false)
+
+  const angle = resolveAngle(contact)
 
   async function draft() {
     setBusy("draft")
@@ -29,7 +31,7 @@ export function OutreachComposer({ contact }: { contact: OutreachContact }) {
       const response = await fetch("/api/outreach/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: contact.id, templateId }),
+        body: JSON.stringify({ contactId: contact.id, stageId }),
       })
       const payload = await response.json()
       if (payload.error) throw new Error(payload.error)
@@ -92,13 +94,13 @@ export function OutreachComposer({ contact }: { contact: OutreachContact }) {
 
       <div className="flex items-center gap-1.5">
         <select
-          value={templateId}
-          onChange={(event) => setTemplateId(event.target.value)}
+          value={stageId}
+          onChange={(event) => setStageId(event.target.value)}
           className={`${fieldClass} h-8 py-0`}
         >
-          {OUTREACH_TEMPLATES.map((template) => (
-            <option key={template.id} value={template.id}>
-              {template.name}
+          {OUTREACH_STAGES.map((stage) => (
+            <option key={stage.id} value={stage.id}>
+              {stage.name}
             </option>
           ))}
         </select>
@@ -107,6 +109,13 @@ export function OutreachComposer({ contact }: { contact: OutreachContact }) {
           Draft
         </Button>
       </div>
+
+      {/* The angle is derived from the tier, so the sender can see what the
+          email will lead with before spending a generation on it. */}
+      <p className="text-[11px] text-muted-foreground">
+        Angle: {angle.name} · asks for{" "}
+        {contact.integration_request ?? angle.defaultAsk}
+      </p>
 
       <input
         type="email"

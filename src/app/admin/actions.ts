@@ -105,6 +105,7 @@ export async function updateOutreachContact(formData: FormData) {
     contact_email: text(formData.get("contact_email")),
     contact_phone: text(formData.get("contact_phone")),
     existing_api_info: text(formData.get("existing_api_info")),
+    integration_request: text(formData.get("integration_request")),
     follow_up_date: text(formData.get("follow_up_date")),
     notes: text(formData.get("notes")),
   }

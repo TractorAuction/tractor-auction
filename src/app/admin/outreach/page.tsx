@@ -35,6 +35,17 @@ const statusTones: Record<OutreachContact["status"], "neutral" | "success" | "wa
   no_response: "neutral",
 }
 
+/** Mirrors the tiers in OUTREACH_SOURCES.md. */
+const TIERS = [
+  { tier: 1, label: "Large platforms" },
+  { tier: 2, label: "Farm auction companies" },
+  { tier: 3, label: "Regional auctioneers" },
+  { tier: 4, label: "Government / municipal" },
+  { tier: 5, label: "Software providers" },
+  { tier: 6, label: "Marketplaces" },
+  { tier: 7, label: "International (Phase 2)" },
+]
+
 function value(params: Record<string, string | string[] | undefined>, key: string) {
   const raw = params[key]
   const single = Array.isArray(raw) ? raw[0] : raw
@@ -45,8 +56,9 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
   const params = await props.searchParams
   const status = value(params, "status")
   const due = value(params, "due") === "1"
+  const tier = Number(value(params, "tier")) || undefined
 
-  const contacts = await getOutreachContacts({ status, due })
+  const contacts = await getOutreachContacts({ status, due, tier })
   const missingEmail = contacts.filter((contact) => !contact.contact_email).length
 
   const fieldClass =
@@ -58,7 +70,7 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Outreach</h1>
           <p className="text-sm text-muted-foreground">
-            {contacts.length} companies in this view.
+            {contacts.length} companies in this view, ordered by tier. Work Tier 1 first.
           </p>
         </div>
         <Button
@@ -89,6 +101,14 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
             </option>
           ))}
         </select>
+        <select name="tier" defaultValue={tier ? String(tier) : ""} className={fieldClass}>
+          <option value="">All tiers</option>
+          {TIERS.map((entry) => (
+            <option key={entry.tier} value={entry.tier}>
+              Tier {entry.tier} — {entry.label}
+            </option>
+          ))}
+        </select>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" name="due" value="1" defaultChecked={due} className="size-4" />
           Follow-up due
@@ -103,6 +123,18 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
         getRowKey={(row) => row.id}
         empty="No companies match this filter."
         columns={[
+          {
+            key: "tier",
+            header: "Tier",
+            cell: (row) =>
+              row.tier ? (
+                <Badge tone={row.tier <= 1 ? "success" : row.tier <= 3 ? "warning" : "neutral"}>
+                  {row.tier}
+                </Badge>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              ),
+          },
           {
             key: "company",
             header: "Company",
@@ -121,6 +153,11 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
                 )}
                 {row.geographic_coverage && (
                   <span className="text-xs text-muted-foreground">{row.geographic_coverage}</span>
+                )}
+                {row.integration_request && (
+                  <span className="text-xs text-muted-foreground">
+                    Ask: {row.integration_request}
+                  </span>
                 )}
               </div>
             ),
@@ -143,6 +180,12 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
                   type="email"
                   defaultValue={row.contact_email ?? ""}
                   placeholder="Email"
+                  className="h-7 rounded border border-border bg-background px-2 text-xs outline-none focus-visible:border-ring"
+                />
+                <input
+                  name="integration_request"
+                  defaultValue={row.integration_request ?? ""}
+                  placeholder="Integration to request"
                   className="h-7 rounded border border-border bg-background px-2 text-xs outline-none focus-visible:border-ring"
                 />
                 <input

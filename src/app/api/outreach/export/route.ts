@@ -4,6 +4,7 @@ import { getOutreachContacts } from "@/lib/admin/queries"
 import { requireAdmin } from "@/lib/auth/require-admin"
 
 const COLUMNS = [
+  "tier",
   "company_name",
   "website_url",
   "contact_name",
@@ -11,6 +12,7 @@ const COLUMNS = [
   "contact_phone",
   "geographic_coverage",
   "inventory_type",
+  "integration_request",
   "existing_api_info",
   "status",
   "outreach_date",

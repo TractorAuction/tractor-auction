@@ -72,6 +72,9 @@ export type OutreachContact = {
   geographic_coverage?: string
   inventory_type?: string
   existing_api_info?: string
+  /** 1 (highest priority) to 7. Drives the outreach email angle. */
+  tier?: number
+  integration_request?: string
   status:
     | "pending"
     | "contacted"

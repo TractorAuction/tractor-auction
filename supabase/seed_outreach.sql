@@ -1,64 +1,90 @@
 -- Outreach CRM prospect list.
 --
+-- Source of truth: OUTREACH_SOURCES.md at the repo root. The tiers here match
+-- that document exactly, and the tier drives both the email angle and the
+-- integration method requested (see src/lib/outreach/templates.ts).
+--
 -- contact_email is deliberately left null. These are real businesses, and
 -- guessing an address risks mail going to the wrong inbox or bouncing and
 -- hurting the sending domain's reputation. Fill each one in from the company's
 -- own contact or partnerships page as you work the queue; the admin UI at
 -- /admin/outreach edits them inline and the send action refuses a blank one.
 --
--- Safe to re-run: keyed on company_name.
+-- Companies that appear in two tiers are seeded once at their highest priority
+-- (lowest tier number) and the overlap is recorded in notes.
+--
+-- Safe to re-run: keyed on company_name, and updates tier / integration data
+-- without touching contact details or pipeline status you have already set.
 
-insert into outreach_contacts (company_name, website_url, geographic_coverage, inventory_type, notes, status)
+insert into outreach_contacts (
+  company_name, website_url, geographic_coverage, inventory_type,
+  tier, integration_request, notes, status
+)
 values
-  -- Tier 1: named in the SOW as connector or outreach targets
-  ('EquipmentFacts', 'https://www.equipmentfacts.com', 'United States', 'Farm and construction equipment', 'SOW priority 1. Aggregator with existing feed infrastructure.', 'pending'),
-  ('AuctionTime', 'https://www.auctiontime.com', 'United States, Canada', 'Farm equipment, trucks, trailers', 'SOW priority 2. Sandhills Global property, shares inventory with TractorHouse.', 'pending'),
-  ('BigIron Auctions', 'https://www.bigiron.com', 'United States', 'Farm equipment, unreserved online', 'SOW priority 3. Weekly Wednesday sales.', 'pending'),
-  ('Purple Wave', 'https://www.purplewave.com', 'United States', 'Agricultural and construction equipment', 'SOW priority 4. No-reserve model, high listing volume.', 'pending'),
-  ('Ritchie Bros.', 'https://www.rbauction.com', 'Global', 'Industrial and agricultural equipment', 'SOW priority 5. Largest player; expect a formal partnerships process.', 'pending'),
-  ('IronPlanet', 'https://www.ironplanet.com', 'Global', 'Heavy equipment, agricultural', 'SOW priority 6. Ritchie Bros. subsidiary — may be one conversation with #5.', 'pending'),
-  ('Proxibid', 'https://www.proxibid.com', 'United States', 'Multi-category marketplace incl. farm equipment', 'SOW priority 7. Hosts many independent auctioneers.', 'pending'),
-  ('HiBid', 'https://www.hibid.com', 'United States, Canada', 'Multi-category auction network', 'SOW priority 8. Auction Flex network; one integration reaches many houses.', 'pending'),
-  ('BidSpotter', 'https://www.bidspotter.com', 'United States, United Kingdom', 'Industrial and agricultural', 'SOW priority 9.', 'pending'),
-  ('Steffes Group', 'https://www.steffesgroup.com', 'Upper Midwest', 'Farm equipment, land', 'SOW priority 10. Strong ND/MN/IA presence.', 'pending'),
+  -- Tier 1 — highest priority. Large platforms likely to already have data
+  -- infrastructure. Lead with traffic and buyer volume.
+  ('EquipmentFacts', 'https://www.equipmentfacts.com', 'North America', 'Agricultural equipment auctions', 1, 'API or XML feed', null, 'pending'),
+  ('AuctionTime', 'https://www.auctiontime.com', 'North America', 'Agricultural equipment auctions', 1, 'API or RSS feed', 'Sandhills Global property; shares inventory with TractorHouse and MarketBook.', 'pending'),
+  ('BigIron Auctions', 'https://www.bigiron.com', 'North America', 'Farm and construction equipment', 1, 'API or XML feed', null, 'pending'),
+  ('Purple Wave Auction', 'https://www.purplewave.com', 'North America', 'Agricultural and construction equipment', 1, 'API or XML feed', null, 'pending'),
+  ('Ritchie Bros.', 'https://www.rbauction.com', 'North America', 'Heavy equipment and trucks', 1, 'Official API', 'Expect a formal partnerships process. IronPlanet is a subsidiary — may be one conversation.', 'pending'),
+  ('IronPlanet', 'https://www.ironplanet.com', 'North America', 'Used heavy equipment', 1, 'Official API', 'Ritchie Bros. subsidiary.', 'pending'),
+  ('BidSpotter', 'https://www.bidspotter.com', 'North America', 'Industrial and agricultural auctions', 1, 'API or RSS feed', null, 'pending'),
+  ('Proxibid', 'https://www.proxibid.com', 'North America', 'Multi-category auctions', 1, 'API or XML feed', 'Hosts many independent auctioneers.', 'pending'),
+  ('HiBid', 'https://www.hibid.com', 'North America', 'Multi-category auctions via Auction Flex', 1, 'API (Auction Flex integration)', 'Also a Tier 5 software provider: one integration reaches hundreds of independent auctioneers. Use the software-provider angle.', 'pending'),
+  ('GovDeals', 'https://www.govdeals.com', 'United States', 'Government surplus equipment', 1, 'Public API or RSS', 'Also Tier 4. Lead with public visibility and transparency.', 'pending'),
+  ('GSA Auctions', 'https://gsaauctions.gov', 'United States', 'Federal surplus equipment', 1, 'Public data feed', 'Also Tier 4. Lead with public visibility and transparency.', 'pending'),
 
-  -- Regional farm auction houses
-  ('Sullivan Auctioneers', 'https://www.sullivanauctioneers.com', 'Illinois, Iowa, Missouri', 'Farm equipment, land', 'High-volume Midwest farm retirement sales.', 'pending'),
-  ('Aumann Auctions', 'https://www.aumannauctions.com', 'United States', 'Antique and late-model farm equipment', 'Notable for collector tractor sales.', 'pending'),
-  ('Wieman Land & Auction', 'https://www.wiemanauction.com', 'South Dakota, Nebraska', 'Farm equipment, land', null, 'pending'),
-  ('Girard Auction & Land Brokers', 'https://www.girardauction.com', 'South Dakota', 'Farm equipment, land', null, 'pending'),
-  ('Schrader Real Estate and Auction', 'https://schraderauction.com', 'Indiana, Midwest', 'Farmland, equipment', null, 'pending'),
-  ('Halderman Real Estate and Farm Management', 'https://www.halderman.com', 'Indiana, Ohio, Illinois', 'Farmland, equipment', null, 'pending'),
-  ('Farmers National Company', 'https://www.farmersnational.com', 'United States', 'Farmland, equipment', 'Large farm management company with auction arm.', 'pending'),
-  ('Hansen Auction Group', 'https://www.hansenauctiongroup.com', 'Wisconsin, Minnesota', 'Farm equipment', null, 'pending'),
-  ('Musser Bros. Auctions', 'https://www.mbauction.com', 'Montana, Wyoming, Idaho', 'Farm and construction equipment', null, 'pending'),
-  ('Assiter Auctioneers', 'https://www.assiter.com', 'Texas, Southwest', 'Farm equipment, land', null, 'pending'),
-  ('Kaufman Auctions', 'https://www.kaufmanauctions.com', 'Kansas', 'Farm equipment, land', null, 'pending'),
-  ('Lippard Auctioneers', 'https://www.lippardauctions.com', 'Oklahoma, Kansas, Texas', 'Farm equipment', null, 'pending'),
-  ('Roller Auctions', 'https://www.rollerauction.com', 'Colorado, Mountain West', 'Equipment, vehicles', null, 'pending'),
-  ('Alex Lyon & Son', 'https://www.lyonauction.com', 'United States', 'Heavy equipment, agricultural', null, 'pending'),
-  ('Yoder & Frey', 'https://www.yoderandfrey.com', 'United States', 'Heavy equipment', null, 'pending'),
-  ('J.M. Wood Auction Company', 'https://www.jmwood.com', 'Alabama, Southeast', 'Construction and farm equipment', null, 'pending'),
-  ('Jeff Martin Auctioneers', 'https://www.jeffmartinauctioneers.com', 'Southeast United States', 'Farm and construction equipment', null, 'pending'),
-  ('Deanco Auction', 'https://www.deancoauction.com', 'Mississippi, Southeast', 'Farm and construction equipment', null, 'pending'),
-  ('Taylor & Martin Group', 'https://www.taylorandmartin.com', 'United States', 'Trucks, trailers, equipment', null, 'pending'),
-  ('Smith Sales Co. Auctioneers', 'https://www.smithsales.net', 'Idaho, Pacific Northwest', 'Farm equipment', null, 'pending'),
-  ('Bar None Auction', 'https://www.barnoneauction.com', 'California, Oregon', 'Equipment, fleet, agricultural', null, 'pending'),
-  ('Ayres Auction & Real Estate', 'https://www.ayresauction.com', 'Tennessee', 'Farm equipment, land', null, 'pending'),
-  ('Gehling Auction Company', 'https://www.gehlingauction.com', 'Minnesota, Iowa', 'Farm equipment', null, 'pending'),
-  ('Ruhter Auction & Realty', 'https://www.ruhterauction.com', 'Nebraska', 'Farm equipment, land', null, 'pending'),
-  ('Bradeen Auctions', 'https://www.bradeenauction.com', 'South Dakota', 'Farm equipment, land', null, 'pending'),
-  ('Pifer''s Auction & Realty', 'https://www.pifers.com', 'North Dakota, Minnesota', 'Farmland, equipment', null, 'pending'),
-  ('Peoples Company', 'https://peoplescompany.com', 'Iowa, Midwest', 'Farmland, equipment', null, 'pending'),
-  ('Sold By Rob', 'https://www.soldbyrob.com', 'Indiana, Ohio', 'Farm equipment', null, 'pending'),
-  ('Kiko Auctioneers', 'https://www.kikoauctions.com', 'Ohio', 'Farm equipment, real estate', null, 'pending'),
-  ('Beck Auctioneers', 'https://www.beckauctioneers.com', 'Illinois', 'Farm equipment', null, 'pending'),
+  -- Tier 2 — farm-specific auction companies running their own platforms.
+  -- Lead with reach beyond their regional audience.
+  ('Steffes Group', 'https://www.steffesgroup.com', 'Midwest US', 'Farm equipment auctions', 2, 'CSV, RSS or XML feed', 'Strong ND/MN/IA presence.', 'pending'),
+  ('Miedema Asset Management (1800LastBid)', 'https://www.1800lastbid.com', 'Midwest US', 'Farm equipment auctions', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Sullivan Auctioneers', 'https://www.sullivanauctioneers.com', 'Midwest US', 'Farm and construction auctions', 2, 'CSV, RSS or XML feed', 'High-volume farm retirement sales.', 'pending'),
+  ('Wieman Land & Auction', 'https://www.wiemanauction.com', 'Midwest US', 'Farm equipment and land', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Aumann Auctions', 'https://www.aumannauctions.com', 'Midwest and International', 'Farm equipment auctions', 2, 'CSV, RSS or XML feed', 'Also listed under Tier 7 international. Notable for collector tractor sales.', 'pending'),
+  ('Schrader Real Estate & Auction', 'https://www.schraderauction.com', 'Midwest US', 'Farm equipment and real estate', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Merit Auctions', 'https://www.meritauctions.com', 'Regional US', 'Agricultural equipment', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Mowrey Auction Company', 'https://www.mowreyauction.com', 'Regional US', 'Farm and equipment auctions', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Yoder & Frey', 'https://www.yoderandfrey.com', 'Ohio / Midwest', 'Farm equipment auctions', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Hansen Auction Group', 'https://www.hansenauctiongroup.com', 'Regional US', 'Agricultural equipment', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Zomer Company Realty & Auction', 'https://www.zomercompany.com', 'Iowa / Midwest', 'Farm equipment and real estate', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Pifer''s Auction & Realty', 'https://www.pifers.com', 'Northern Plains', 'Farm equipment and land', 2, 'CSV, RSS or XML feed', null, 'pending'),
+  ('Witcher Auctions', 'https://www.witcherauctions.com', 'Regional US', 'Agricultural equipment', 2, 'CSV, RSS or XML feed', null, 'pending'),
 
-  -- Marketplaces and data aggregators
-  ('TractorHouse', 'https://www.tractorhouse.com', 'United States, Canada', 'Tractor listings and auctions', 'Sandhills Global — likely the same contact as AuctionTime.', 'pending'),
-  ('Tractor Zoom', 'https://www.tractorzoom.com', 'United States', 'Auction aggregation and pricing data', 'Direct aggregator peer. May be competitor or data partner.', 'pending'),
-  ('Machinery Pete', 'https://www.machinerypete.com', 'United States', 'Auction results and pricing data', 'Strong brand in auction price history.', 'pending'),
-  ('Fastline', 'https://www.fastline.com', 'United States', 'Farm equipment marketplace', null, 'pending'),
-  ('AgDealer', 'https://www.agdealer.com', 'Canada', 'Farm equipment marketplace', 'Canadian coverage gap filler.', 'pending'),
-  ('Equipment Trader', 'https://www.equipmenttrader.com', 'United States', 'Equipment marketplace', null, 'pending')
-on conflict (company_name) do nothing;
+  -- Tier 3 — regional auctioneers. Thousands of listings collectively.
+  ('Maring Auction Company', 'https://www.maringauction.com', 'Regional US', 'Farm equipment', 3, 'CSV export or manual submission', null, 'pending'),
+  ('Kramer Auction Service', 'https://www.kramerauction.com', 'Regional US', 'Farm equipment', 3, 'CSV export or manual submission', null, 'pending'),
+  ('Girard Auction & Land Brokers', 'https://www.girardauction.com', 'Regional US', 'Farm equipment and land', 3, 'CSV export or manual submission', null, 'pending'),
+  ('McGrew Equipment Auctions', 'https://www.mcgrewonlineauctions.com', 'Regional US', 'Agricultural equipment', 3, 'CSV export or manual submission', null, 'pending'),
+  ('Vanderbrink Auctions', 'https://www.vanderbrinkauctions.com', 'Iowa / Midwest', 'Farm equipment and real estate', 3, 'CSV export or manual submission', null, 'pending'),
+
+  -- Tier 4 — government and municipal. Public data is generally accessible.
+  ('Public Surplus', 'https://www.publicsurplus.com', 'United States', 'Government surplus equipment', 4, 'Public API or RSS feed', null, 'pending'),
+  ('Municibid', 'https://www.municibid.com', 'United States', 'Municipal surplus equipment', 4, 'Public API or RSS feed', null, 'pending'),
+
+  -- Tier 5 — auction software providers. Highest leverage: one integration can
+  -- unlock every auction company running on their platform.
+  ('Wavebid', 'https://wavebid.com', 'North America', 'Auction software platform', 5, 'Partner API or white-label data feed', 'Auction management platform with many client auction houses.', 'pending'),
+  ('BidJS', 'https://bidjs.com', 'Global', 'Auction software platform', 5, 'Partner API or white-label data feed', 'Used by regional auction companies.', 'pending'),
+  ('Auction Mobility', 'https://www.auctionmobility.com', 'Global', 'White-label auction platform', 5, 'Partner API or white-label data feed', null, 'pending'),
+
+  -- Tier 6 — mixed marketplaces. Some are competitors; approach carefully.
+  ('MachineryTrader', 'https://www.machinerytrader.com', 'North America', 'Equipment marketplace with auction inventory', 6, 'Data partnership or cross-listing', 'Sandhills Global property. Possible competitor — approach carefully.', 'pending'),
+  ('TractorHouse', 'https://www.tractorhouse.com', 'North America', 'Tractor listings and auctions', 6, 'Data partnership or cross-listing', 'Sandhills Global — likely the same contact as AuctionTime.', 'pending'),
+  ('Fastline', 'https://www.fastline.com', 'United States', 'Farm equipment marketplace', 6, 'Data partnership or cross-listing', null, 'pending'),
+  ('MarketBook', 'https://www.marketbook.com', 'North America', 'Equipment marketplace with auction inventory', 6, 'Data partnership or cross-listing', 'Sandhills Global property.', 'pending'),
+  ('Machinio', 'https://www.machinio.com', 'Global', 'Equipment marketplace', 6, 'Data partnership or cross-listing', 'Possible competitor — approach carefully.', 'pending'),
+
+  -- Tier 7 — international. Contact after US coverage is established (Phase 2).
+  ('Euro Auctions', 'https://www.euroauctions.com', 'UK / Europe', 'Heavy and agricultural equipment', 7, 'International data feed or API', 'Phase 2. Request US-relevant inventory only.', 'pending'),
+  ('Cheffins', 'https://www.cheffins.co.uk', 'UK', 'Agricultural machinery auctions', 7, 'International data feed or API', 'Phase 2.', 'pending'),
+  ('Pickles Auctions', 'https://www.pickles.com.au', 'Australia', 'Equipment and vehicle auctions', 7, 'International data feed or API', 'Phase 2.', 'pending'),
+  ('AllSurplus', 'https://www.allsurplus.com', 'Global', 'Surplus and industrial equipment', 7, 'International data feed or API', 'Phase 2. Liquidity Services marketplace.', 'pending')
+on conflict (company_name) do update set
+  website_url = excluded.website_url,
+  geographic_coverage = excluded.geographic_coverage,
+  inventory_type = excluded.inventory_type,
+  tier = excluded.tier,
+  integration_request = excluded.integration_request,
+  -- Keep any research already done: only fill notes when the row has none.
+  notes = coalesce(outreach_contacts.notes, excluded.notes);
