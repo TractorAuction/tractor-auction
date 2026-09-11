@@ -18,10 +18,16 @@ export async function UserMenu() {
   if (!user) {
     return (
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/login" />}>
+        <Button
+          variant="outline"
+          size="lg"
+          className="px-4"
+          nativeButton={false}
+          render={<Link href="/login" />}
+        >
           Log In
         </Button>
-        <Button size="sm" nativeButton={false} render={<Link href="/register" />}>
+        <Button size="lg" className="px-4" nativeButton={false} render={<Link href="/register" />}>
           Sign Up
         </Button>
       </div>

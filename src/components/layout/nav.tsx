@@ -1,22 +1,41 @@
-import Link from "next/link"
+"use client"
 
-// Only routes that exist. /results, /brands, /resources and /alerts are added
-// back as their pages land (auction results Day 14, alerts Day 9).
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+
+import { cn } from "@/lib/utils"
+
 const links = [
   { href: "/search", label: "Auctions" },
-  { href: "/category/tractor", label: "Tractors" },
-  { href: "/category/combine", label: "Combines" },
-  { href: "/partner", label: "List With Us" },
+  { href: "/results", label: "Results" },
+  { href: "/brands", label: "Brands" },
+  { href: "/resources", label: "Resources" },
+  { href: "/alerts", label: "Alerts" },
+  { href: "/about", label: "About" },
 ]
 
 export function Nav() {
+  const pathname = usePathname()
+
   return (
     <nav className="hidden items-center gap-6 text-sm font-medium text-foreground md:flex">
-      {links.map((link) => (
-        <Link key={link.href} href={link.href} className="hover:text-primary">
-          {link.label}
-        </Link>
-      ))}
+      {links.map((link) => {
+        const active = pathname === link.href || pathname.startsWith(`${link.href}/`)
+
+        return (
+          <Link
+            key={link.href}
+            href={link.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "transition-colors hover:text-primary",
+              active && "text-primary"
+            )}
+          >
+            {link.label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }
