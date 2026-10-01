@@ -42,3 +42,7 @@ next-env.d.ts
 
 # claude code local settings
 .claude/settings.local.json
+
+# This project builds with pnpm; a second lockfile silently diverges and
+# breaks the Vercel build (it installs with pnpm when pnpm-lock.yaml exists).
+package-lock.json
