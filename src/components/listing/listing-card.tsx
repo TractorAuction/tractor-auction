@@ -1,4 +1,5 @@
-import { Tractor } from "lucide-react"
+import { ImageOff } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 
 import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
@@ -12,6 +13,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
   ].filter(Boolean)
 
   const bid = formatCurrency(listing.current_bid)
+  const title = listing.title ?? [listing.year, listing.make, listing.model].filter(Boolean).join(" ")
+  const cover = listing.images[0]
 
   return (
     <Link
@@ -34,13 +37,33 @@ export function ListingCard({ listing }: { listing: Listing }) {
           )}
         </div>
 
-        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/60 text-muted-foreground/40 transition-transform group-hover:scale-105">
-          <Tractor className="size-12" strokeWidth={1.25} />
-        </div>
+        {/* Only ever the source's own photo. A listing with no photo says so
+            rather than borrowing a stock tractor, which would misrepresent the
+            machine someone is about to bid on. */}
+        {cover ? (
+          <Image
+            src={cover}
+            alt={title}
+            fill
+            sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/60">
+            <ImageOff className="size-8" strokeWidth={1.25} />
+            <span className="text-[11px] font-medium">No photo</span>
+          </div>
+        )}
+
+        {listing.images.length > 1 && (
+          <span className="absolute bottom-2 right-2 rounded bg-foreground/70 px-1.5 py-0.5 text-[11px] font-medium text-background backdrop-blur-sm">
+            {listing.images.length} photos
+          </span>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{listing.title}</h3>
+        <h3 className="line-clamp-1 text-sm font-semibold text-foreground">{title}</h3>
         {specs.length > 0 && (
           <p className="text-xs text-muted-foreground">{specs.join(" • ")}</p>
         )}
