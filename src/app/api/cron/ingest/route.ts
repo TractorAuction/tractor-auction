@@ -21,14 +21,15 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 /**
- * Ingestion is I/O bound on other companies' feeds. 300s is the ceiling on Pro;
- * Hobby caps lower, which is safe because the run carries its own time budget and
- * records itself as partial, resuming at the next tick.
+ * 60s is the Hobby plan's function ceiling, and a maxDuration above it fails the
+ * build rather than degrading. Safe to raise to 300 on Pro. A run that does not
+ * finish inside the budget records itself partial and resumes on the next tick,
+ * so the cap costs latency rather than correctness.
  */
-export const maxDuration = 300
+export const maxDuration = 60
 
 /** Leaves headroom inside maxDuration to write results and respond. */
-const RUN_BUDGET_MS = 240_000
+const RUN_BUDGET_MS = 45_000
 
 async function ingest(request: Request) {
   const auth = requireIngestSecret(request)

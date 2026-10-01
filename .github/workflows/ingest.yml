@@ -1,0 +1,62 @@
+# Ingestion scheduler.
+#
+# Vercel Cron on the Hobby plan runs at most once a day, which is too slow for
+# auction data where "ending soon" is the whole point. The ingest endpoint is
+# authenticated with a bearer token rather than tied to Vercel's scheduler, so
+# any scheduler can drive it — including this one, which is free.
+#
+# vercel.json keeps a daily Vercel cron as a backstop for when this is disabled.
+# On Vercel Pro, raise that to "0 */6 * * *" and this workflow becomes optional.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   CRON_SECRET  same value as the Vercel env var
+#   SITE_URL     https://tractorauction.com
+
+name: Ingest auction feeds
+
+on:
+  schedule:
+    # Every 6 hours. GitHub may delay scheduled runs under load; ingestion is
+    # idempotent, so a late or doubled run costs nothing.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Fetch and map feeds without writing anything"
+        type: boolean
+        default: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Trigger ingestion
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          DRY: ${{ inputs.dry_run && '?dry=1' || '' }}
+        run: |
+          if [ -z "$CRON_SECRET" ] || [ -z "$SITE_URL" ]; then
+            echo "::error::CRON_SECRET and SITE_URL repository secrets must both be set"
+            exit 1
+          fi
+
+          # --fail-with-body so a non-2xx still prints the API's error message.
+          http_code=$(curl --silent --show-error --fail-with-body \
+            --max-time 120 \
+            --retry 2 --retry-delay 30 --retry-all-errors \
+            --write-out '%{http_code}' \
+            --output response.json \
+            -H "authorization: Bearer $CRON_SECRET" \
+            "${SITE_URL%/}/api/cron/ingest${DRY}") || true
+
+          echo "HTTP $http_code"
+          # Printed to the run log so a failing feed is visible without opening
+          # the database.
+          python3 -m json.tool < response.json || cat response.json
+
+          case "$http_code" in
+            2*) ;;
+            *) echo "::error::ingestion returned HTTP $http_code"; exit 1 ;;
+          esac

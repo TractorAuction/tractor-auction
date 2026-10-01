@@ -210,11 +210,24 @@ a config edit, not code. Optional keys: `itemsPath`, `staticFields`,
 
 ### Scheduling
 
-Vercel Cron hits `/api/cron/ingest` every 6 hours (`vercel.json`). The schedule
-per source lives in the database — the tick asks which sources are due by
-`sync_interval_minutes` against `last_synced_at` — so changing a cadence or adding
-a source needs no redeploy. Each run carries a wall-clock budget, stops paging
-when it expires, records itself as `partial`, and resumes on the next tick.
+Two schedulers drive the same endpoint, because the Vercel **Hobby** plan runs
+cron at most once a day and caps functions at 60s:
+
+| Scheduler | Cadence | Notes |
+|---|---|---|
+| `.github/workflows/ingest.yml` | every 6h | Primary. Needs `CRON_SECRET` and `SITE_URL` repo secrets. Also runnable by hand from the Actions tab. |
+| `vercel.json` cron | daily, 07:00 UTC | Backstop. Raise to `0 */6 * * *` on Pro and the workflow becomes optional. |
+
+The endpoint authenticates with a bearer token rather than being tied to Vercel's
+scheduler, so any scheduler can drive it and a doubled run is harmless.
+
+The schedule **per source** lives in the database — the tick asks which sources are
+due by `sync_interval_minutes` against `last_synced_at` — so changing a cadence or
+adding a source needs no redeploy. Each run carries a wall-clock budget, stops
+paging when it expires, records itself as `partial`, and resumes on the next tick.
+
+> On Hobby, raising `maxDuration` above 60 in the route fails the build rather
+> than degrading at runtime. Same for a sub-daily `vercel.json` cron.
 
 `?dry=1` runs every due feed without writing anything.
 
