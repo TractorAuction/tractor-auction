@@ -49,6 +49,9 @@ ANTHROPIC_API_KEY=                # AI email drafting
 RESEND_API_KEY=                   # sending
 OUTREACH_FROM_EMAIL=partnerships@tractorauction.com
 
+# Ingestion — any long random string; `openssl rand -hex 32`
+CRON_SECRET=
+
 # Alerts (Day 9)
 ALERTS_FROM_EMAIL=alerts@tractorauction.com
 ```
@@ -66,6 +69,7 @@ supabase/migrations/0002_align_schema.sql    reconciles pre-existing tables
 supabase/migrations/0003_partners_and_roles.sql
 supabase/migrations/0004_auth.sql            profile trigger, admin check, per-user RLS
 supabase/migrations/0005_outreach_tiers.sql
+supabase/migrations/0006_ingestion.sql       feed config per source + sync_runs audit log
 ```
 
 Then seed:
@@ -73,6 +77,7 @@ Then seed:
 ```
 supabase/seed.sql            4 auction sources + 30 sample listings
 supabase/seed_outreach.sql   43 outreach prospects across 7 tiers
+supabase/seed_sources.sql    feed config + field maps for the priority sources
 ```
 
 > **Migration rule:** never edit `0001`. It uses `create table if not exists`,
@@ -167,6 +172,79 @@ admin check, so an anonymous visitor can increment a counter without holding
 endpoint; guarding only the page that renders the form would leave it open.
 
 ---
+
+## Data ingestion
+
+Listings are ingested from **authorized** source feeds. The connector is chosen by
+wire format, not by company, so onboarding a source is a row in `auction_sources`
+rather than a new file:
+
+| `integration_type` | Connector | Use for |
+|---|---|---|
+| `api` | `json-api` | REST/JSON partner feeds, with optional paging |
+| `rss`, `xml` | `xml-feed` | RSS and XML exports |
+| `csv`, `ftp`, `google_sheets` | `csv-feed` | CSV exports and published Google Sheets |
+| `manual`, `email` | — | Partner portal / admin entry; no automated fetch |
+
+`feed_config` holds the feed URL and a `fieldMap` pointing each `listings` column
+at the raw key that carries it, so a partner who calls a column `EquipMake` needs
+a config edit, not code. Optional keys: `itemsPath`, `staticFields`,
+`pageParam`/`pageSize`/`maxPages`, `authHeaderEnv`, `delimiter`.
+
+### Onboarding a feed
+
+1. **Preview the mapping first.** A wrong `fieldMap` does not error — it writes
+   plausible rubbish. The preview fetches and maps the real feed and writes nothing:
+
+   ```bash
+   curl -X POST https://www.tractorauction.com/api/ingest/preview \
+     -H "authorization: Bearer $CRON_SECRET" \
+     -H "content-type: application/json" \
+     -d '{"integration_type":"csv","feed_config":{"url":"https://…","fieldMap":{…}}}'
+   ```
+
+2. Check the returned `sample` against the live listing pages, then save the
+   config onto the source row and set `sync_enabled = true`.
+
+3. Watch the first real run in `sync_runs`.
+
+### Scheduling
+
+Vercel Cron hits `/api/cron/ingest` every 6 hours (`vercel.json`). The schedule
+per source lives in the database — the tick asks which sources are due by
+`sync_interval_minutes` against `last_synced_at` — so changing a cadence or adding
+a source needs no redeploy. Each run carries a wall-clock budget, stops paging
+when it expires, records itself as `partial`, and resumes on the next tick.
+
+`?dry=1` runs every due feed without writing anything.
+
+The core (`src/lib/ingestion/`) has no Next.js coupling, so if volume outgrows a
+serverless function it lifts onto a Railway worker by calling `runDueSources()`
+from a plain Node entry point.
+
+### Guarantees
+
+- **Deduplication** is `(source_id, external_id)`, enforced by a unique index and
+  upsert. Feeds that repeat a lot across pages are also deduped in-batch, because
+  Postgres refuses an upsert that hits the same conflict target twice.
+- **Admin promotions survive a sync.** `is_featured`, `is_sponsored` and
+  `sponsored_rank` are never written by ingestion.
+- **One bad row costs one row.** Items that fail validation are recorded in
+  `sync_runs.item_errors` with a reason; the rest of the feed still lands.
+- **Expiry is date-driven**, never "this listing stopped appearing in the feed" —
+  a truncated run or feed outage would otherwise read as sold stock and empty the
+  site.
+- **Nothing is disguised.** Requests identify themselves as `TractorAuctionBot`
+  with a contact address and back off on 429/5xx. A source that blocks automated
+  access is treated as a source that needs a data agreement.
+
+### Source authorization status
+
+As checked 2026-10-01, no third-party feed is authorized yet, so every source
+ships `sync_enabled = false`. See the header of `supabase/seed_sources.sql` for
+what each one is waiting on. The path that works without a third-party agreement
+is **Partner Feed (CSV)**: publish a sheet, point `feed_config.url` at its CSV
+export, enable it.
 
 ## Documentation
 

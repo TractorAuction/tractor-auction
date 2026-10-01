@@ -20,6 +20,34 @@ export type AuctionSource = {
   is_sponsored: boolean
   last_synced_at?: string
   created_at: string
+  /**
+   * Connector configuration for this source's feed: where it lives and how its
+   * fields map onto listings columns. Shaped by FeedConfig in lib/ingestion.
+   */
+  feed_config?: Record<string, unknown>
+  /** Only true once the feed is authorized and its mapping is verified. */
+  sync_enabled?: boolean
+  sync_interval_minutes?: number
+  last_sync_status?: "running" | "success" | "partial" | "failed"
+  last_sync_error?: string
+}
+
+export type SyncRun = {
+  id: string
+  source_id: string
+  status: "running" | "success" | "partial" | "failed"
+  trigger: "cron" | "manual" | "backfill"
+  started_at: string
+  finished_at?: string
+  duration_ms?: number
+  items_seen: number
+  items_created: number
+  items_updated: number
+  items_skipped: number
+  items_expired: number
+  item_errors: Array<{ externalId?: string; reason: string }>
+  error_message?: string
+  created_at: string
 }
 
 export type Listing = {
