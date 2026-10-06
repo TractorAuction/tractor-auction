@@ -57,6 +57,7 @@ OUTREACH_FROM_EMAIL=partnerships@tractorauction.com
 
 # Ingestion — any long random string; `openssl rand -hex 32`
 CRON_SECRET=
+GSA_AUCTIONS_API_KEY=              # free, instant: https://api.data.gov/signup/
 
 # Alerts (Day 9)
 ALERTS_FROM_EMAIL=alerts@tractorauction.com
@@ -261,11 +262,18 @@ from a plain Node entry point.
 
 ### Source authorization status
 
-As checked 2026-10-01, no third-party feed is authorized yet, so every source
-ships `sync_enabled = false`. See the header of `supabase/seed_sources.sql` for
-what each one is waiting on. The path that works without a third-party agreement
-is **Partner Feed (CSV)**: publish a sheet, point `feed_config.url` at its CSV
-export, enable it.
+As checked 2026-10-07, no third-party commercial feed is authorized yet, so
+AuctionTime/BigIron/Purple Wave/Ritchie Bros. all ship `sync_enabled = false`.
+See the header of `supabase/seed_sources.sql` for what each one is waiting on.
+
+Two paths don't need a third-party agreement at all:
+
+- **GSA Auctions** — a public, free, self-service federal API, no outreach
+  needed. Register a key at https://api.data.gov/signup/ (instant), set
+  `GSA_AUCTIONS_API_KEY`, flip `sync_enabled` on the source row. Verified
+  end-to-end against live data (see `lib/ingestion/connectors/gsa-auctions.ts`).
+- **Partner Feed (CSV)** — publish a sheet, point `feed_config.url` at its CSV
+  export, enable it.
 
 ## Search (Meilisearch)
 

@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import type { AuctionSource } from "@/types"
 
 import { csvFeedConnector } from "./connectors/csv-feed"
+import { gsaAuctionsConnector } from "./connectors/gsa-auctions"
 import { jsonApiConnector } from "./connectors/json-api"
 import { xmlFeedConnector } from "./connectors/xml-feed"
 import { normalizeItem } from "./normalize"
@@ -24,6 +25,26 @@ const CONNECTORS: Record<AuctionSource["integration_type"], Connector | null> = 
   // Listings arrive through the partner portal or admin UI, not over the wire.
   manual: null,
   email: null,
+}
+
+/**
+ * Escape hatch for a source whose feed is genuinely JSON/XML/CSV (so
+ * integration_type is still accurate) but needs logic a generic fieldMap
+ * can't express — composite ids, content filtering, HTML cleanup. Keyed by
+ * feed_config.connector rather than a new integration_type, since the wire
+ * format hasn't changed, only how this one source's payload is shaped.
+ */
+const NAMED_CONNECTORS: Record<string, Connector> = {
+  "gsa-auctions": gsaAuctionsConnector,
+}
+
+function resolveConnector(source: AuctionSource, config: FeedConfig): Connector | null {
+  if (config.connector) {
+    const named = NAMED_CONNECTORS[config.connector]
+    if (!named) throw new Error(`Unknown feed_config.connector "${config.connector}"`)
+    return named
+  }
+  return CONNECTORS[source.integration_type]
 }
 
 /** Rows written per request. Postgres handles far more, but a smaller batch
@@ -69,7 +90,8 @@ export async function runSource(
     durationMs: 0,
   }
 
-  const connector = CONNECTORS[source.integration_type]
+  const config = configOverride ?? ((source.feed_config ?? {}) as FeedConfig)
+  const connector = resolveConnector(source, config)
   if (!connector) {
     return {
       ...base,
@@ -98,7 +120,6 @@ export async function runSource(
     runId = runRow.id as string
   }
 
-  const config = configOverride ?? ((source.feed_config ?? {}) as FeedConfig)
   const itemErrors: ItemError[] = []
 
   try {

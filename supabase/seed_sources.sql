@@ -172,3 +172,48 @@ on conflict (id) do update set
   integration_type = excluded.integration_type,
   feed_config = excluded.feed_config,
   sync_interval_minutes = excluded.sync_interval_minutes;
+
+-- ---------------------------------------------------------------------------
+-- GSA Auctions: public, free, self-service federal API — no outreach needed.
+--
+-- Docs: https://gsa.github.io/auctions_api/. Requires a free api.data.gov key
+-- (instant signup, no approval wait: https://api.data.gov/signup/) — set as
+-- GSA_AUCTIONS_API_KEY. Sells ALL federal surplus property (furniture,
+-- electronics, vehicles), not just agricultural equipment, so the connector
+-- (lib/ingestion/connectors/gsa-auctions.ts) filters to a deliberately strict
+-- set of unambiguous equipment phrases and named ag-equipment manufacturers
+-- before accepting a lot — verified against live data (15 of 1,114 lots
+-- matched in testing, zero false positives after excluding two brand names
+-- that collide with common words/other products: "Versatile" the tractor
+-- brand collides with the English adjective, "Challenger" collides with the
+-- Dodge Challenger).
+--
+-- sync_enabled stays false here deliberately: flip it only once
+-- GSA_AUCTIONS_API_KEY is set to a real registered key, not api.data.gov's
+-- shared DEMO_KEY (10 requests/hour, shared globally — fine for one-time
+-- verification, not for a recurring cron).
+-- ---------------------------------------------------------------------------
+insert into auction_sources (
+  id, name, website_url, description, geographic_coverage,
+  integration_type, status, is_featured, sync_enabled, sync_interval_minutes, feed_config
+)
+values (
+  '66666666-6666-6666-6666-666666666666',
+  'GSA Auctions',
+  'https://www.gsaauctions.gov',
+  'Federal government surplus property auctions (General Services Administration). Public, free, self-service API -- no partner agreement needed.',
+  'United States',
+  'api',
+  'active',
+  false,
+  false,
+  360,
+  jsonb_build_object(
+    'connector', 'gsa-auctions',
+    'url', 'https://api.gsa.gov/assets/gsaauctions/v2/auctions',
+    'authHeaderEnv', 'GSA_AUCTIONS_API_KEY'
+  )
+)
+on conflict (id) do update set
+  feed_config = excluded.feed_config,
+  sync_interval_minutes = excluded.sync_interval_minutes;

@@ -52,6 +52,10 @@ export type ItemError = {
  * rather than a new connector.
  */
 export type FeedConfig = {
+  /** Overrides the integration_type-based connector lookup for a source whose
+   *  wire format is generic (JSON/XML/CSV) but whose payload needs logic a
+   *  fieldMap can't express — see NAMED_CONNECTORS in lib/ingestion/run.ts. */
+  connector?: string
   url?: string
   /** Dotted path to the array of items inside a JSON envelope, e.g. "data.results". */
   itemsPath?: string
