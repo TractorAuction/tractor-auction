@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  BarChart3,
   Building2,
   Handshake,
   LayoutDashboard,
@@ -21,6 +22,7 @@ const links = [
   { href: "/admin/outreach", label: "Outreach", icon: Megaphone },
   { href: "/admin/partners", label: "Partners", icon: Handshake },
   { href: "/admin/sponsored", label: "Sponsored", icon: Star },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/users", label: "Users", icon: Users },
 ]
 

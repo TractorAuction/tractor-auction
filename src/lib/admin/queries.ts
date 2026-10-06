@@ -371,3 +371,140 @@ export async function getClicksBySource(days = 30) {
     }))
     .sort((a, b) => b.clicks - a.clicks)
 }
+
+// ---------------------------------------------------------------------------
+// Analytics (/admin/analytics)
+// ---------------------------------------------------------------------------
+
+/** YYYY-MM-DD in UTC, used as the grouping key for every by-day series below. */
+function dayKey(iso: string): string {
+  return iso.slice(0, 10)
+}
+
+/** Every day in [days ago .. today], oldest first, zero-filled before counts
+ *  are applied — a day with no activity is a real zero, not a gap in the chart. */
+function dayRange(days: number): string[] {
+  const out: string[] = []
+  for (let offset = days - 1; offset >= 0; offset -= 1) {
+    out.push(dayKey(new Date(Date.now() - offset * 86_400_000).toISOString()))
+  }
+  return out
+}
+
+export type DailyCount = { date: string; count: number }
+
+/** Outbound clicks per day — the trend line behind the dashboard's
+ *  click-events-by-source table, which only shows the 30-day total. */
+export async function getClicksOverTime(days = 30): Promise<DailyCount[]> {
+  const supabase = createAdminClient()
+
+  const { data } = await supabase
+    .from("click_events")
+    .select("clicked_at")
+    .gte("clicked_at", daysAgo(days))
+    .limit(50_000)
+
+  const counts = new Map<string, number>()
+  for (const row of data ?? []) {
+    const day = dayKey((row as Row).clicked_at as string)
+    counts.set(day, (counts.get(day) ?? 0) + 1)
+  }
+
+  return dayRange(days).map((date) => ({ date, count: counts.get(date) ?? 0 }))
+}
+
+/** New profiles per day — "new user registrations over time" from the Day 17
+ *  checklist. profiles.created_at is set by the signup trigger, not editable
+ *  by the user, so this is a trustworthy signup date. */
+export async function getSignupsOverTime(days = 30): Promise<DailyCount[]> {
+  const supabase = createAdminClient()
+
+  const { data } = await supabase
+    .from("profiles")
+    .select("created_at")
+    .gte("created_at", daysAgo(days))
+    .limit(50_000)
+
+  const counts = new Map<string, number>()
+  for (const row of data ?? []) {
+    const day = dayKey((row as Row).created_at as string)
+    counts.set(day, (counts.get(day) ?? 0) + 1)
+  }
+
+  return dayRange(days).map((date) => ({ date, count: counts.get(date) ?? 0 }))
+}
+
+export type MakePopularity = { make: string; activeListings: number; clicks: number }
+
+/**
+ * Ranks makes by active listing count, with each make's click total alongside
+ * it. Two different denominators (listings vs. clicks) on purpose — a make
+ * can be well-stocked but rarely clicked, or the reverse, and collapsing that
+ * into one "popularity" number would hide which one is true.
+ */
+export async function getPopularMakes(limit = 10): Promise<MakePopularity[]> {
+  const supabase = createAdminClient()
+
+  const [listingsResult, clicksResult] = await Promise.all([
+    supabase.from("listings").select("make").eq("status", "active").limit(50_000),
+    supabase
+      .from("click_events")
+      .select("listing_id, listings(make)")
+      .gte("clicked_at", daysAgo(30))
+      .limit(50_000),
+  ])
+
+  const byMake = new Map<string, { activeListings: number; clicks: number }>()
+
+  for (const row of listingsResult.data ?? []) {
+    const make = optional<string>((row as Row).make)
+    if (!make) continue
+    const entry = byMake.get(make) ?? { activeListings: 0, clicks: 0 }
+    entry.activeListings += 1
+    byMake.set(make, entry)
+  }
+
+  for (const row of clicksResult.data ?? []) {
+    const listing = (row as Row).listings as Row | null
+    const make = optional<string>(listing?.make)
+    if (!make) continue
+    const entry = byMake.get(make) ?? { activeListings: 0, clicks: 0 }
+    entry.clicks += 1
+    byMake.set(make, entry)
+  }
+
+  return Array.from(byMake.entries())
+    .map(([make, counts]) => ({ make, ...counts }))
+    .sort((a, b) => b.activeListings - a.activeListings)
+    .slice(0, limit)
+}
+
+export type PlacementPerformance = {
+  id: string
+  label: string
+  placementType: string
+  impressions: number
+  clicks: number
+  /** Null rather than 0 when there have been no impressions yet — a 0% CTR
+   *  and "not enough data for a rate" are different things to show an admin. */
+  ctr: number | null
+  isActive: boolean
+}
+
+/** Featured/sponsored placement performance — impressions, clicks, CTR —
+ *  for the Day 17 "featured listing performance report" checklist item. */
+export async function getPlacementPerformance(): Promise<PlacementPerformance[]> {
+  const placements = await getSponsoredPlacements()
+
+  return placements
+    .map((placement) => ({
+      id: placement.id,
+      label: placement.listing_title ?? placement.source_name ?? placement.placement_type,
+      placementType: placement.placement_type,
+      impressions: placement.impressions,
+      clicks: placement.clicks,
+      ctr: placement.impressions > 0 ? placement.clicks / placement.impressions : null,
+      isActive: placement.is_active,
+    }))
+    .sort((a, b) => b.impressions - a.impressions)
+}
