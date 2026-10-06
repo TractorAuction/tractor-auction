@@ -78,7 +78,11 @@ export async function generateOutreachEmail(
   const angle = resolveAngle(contact)
   const ask = contact.integration_request ?? angle.defaultAsk
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  // ANTHROPIC_API_KEY is the documented name (README, CLAUDE.md) and what the
+  // Anthropic SDK and ecosystem tooling expect by default. Claude_API_KEY is a
+  // fallback for the key as it's actually named in Vercel today — remove this
+  // once a correctly-named var is added there; nothing else needs to change.
+  const apiKey = process.env.ANTHROPIC_API_KEY || process.env.Claude_API_KEY
   if (!apiKey || apiKey.startsWith("your_")) {
     throw new Error(
       "ANTHROPIC_API_KEY is not configured. Add it to .env.local to generate outreach emails."
