@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache"
 
 import { requireAdmin } from "@/lib/auth/require-admin"
+import { patchListing } from "@/lib/meilisearch/sync"
 import { createAdminClient } from "@/lib/supabase/admin"
+import type { ListingDocument } from "@/lib/meilisearch/client"
 
 /**
  * Every action re-checks admin access. A server action is a public endpoint —
@@ -20,6 +22,20 @@ function text(value: FormDataEntryValue | null): string | null {
   return trimmed === "" ? null : trimmed
 }
 
+/**
+ * Best-effort patch to the search index after an admin write. Logged, never
+ * thrown — a Meilisearch hiccup must not turn into a failed admin action when
+ * the Postgres write it's reacting to already succeeded. The next full
+ * ingestion run or a manual reindex corrects any patch that silently failed.
+ */
+async function syncIndexPatch(id: string, patch: Partial<ListingDocument>) {
+  try {
+    await patchListing(id, patch)
+  } catch (error) {
+    console.error(`[admin] search index patch failed for listing ${id}:`, error)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Listings
 // ---------------------------------------------------------------------------
@@ -31,6 +47,7 @@ export async function setListingStatus(formData: FormData) {
   if (!id || !status) return
 
   await supabase.from("listings").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
+  await syncIndexPatch(id, { status })
   revalidatePath("/admin/listings")
 }
 
@@ -46,6 +63,7 @@ export async function toggleListingFlag(formData: FormData) {
     .from("listings")
     .update({ [field]: next, updated_at: new Date().toISOString() })
     .eq("id", id)
+  await syncIndexPatch(id, { [field]: next })
 
   revalidatePath("/admin/listings")
   revalidatePath("/")
@@ -226,6 +244,7 @@ export async function createPlacement(formData: FormData) {
   // A placement on a listing is what makes the "Sponsored" label appear.
   if (listingId) {
     await supabase.from("listings").update({ is_sponsored: true }).eq("id", listingId)
+    await syncIndexPatch(listingId, { is_sponsored: true })
   }
 
   revalidatePath("/admin/sponsored")
@@ -256,7 +275,9 @@ export async function setPlacementActive(formData: FormData) {
       .eq("listing_id", listingId)
       .eq("is_active", true)
 
-    await supabase.from("listings").update({ is_sponsored: (count ?? 0) > 0 }).eq("id", listingId)
+    const isSponsored = (count ?? 0) > 0
+    await supabase.from("listings").update({ is_sponsored: isSponsored }).eq("id", listingId)
+    await syncIndexPatch(listingId, { is_sponsored: isSponsored })
   }
 
   revalidatePath("/admin/sponsored")

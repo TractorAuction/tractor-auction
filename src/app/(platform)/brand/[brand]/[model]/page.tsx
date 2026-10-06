@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { searchListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 import { matchSlug, slugify } from "@/lib/seo/slug"
 
 /**
@@ -11,7 +12,7 @@ import { matchSlug, slugify } from "@/lib/seo/slug"
  * than an empty page.
  */
 async function resolve(brandSlug: string, modelSlug: string) {
-  const { makes } = await getFilterFacets()
+  const { makes } = await getSearchFacets()
   const make = matchSlug(brandSlug, makes)
   if (!make) return null
 

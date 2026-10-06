@@ -1,3 +1,5 @@
+import { mapListing } from "@/lib/listings/queries"
+import { syncListings } from "@/lib/meilisearch/sync"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { AuctionSource } from "@/types"
 
@@ -139,10 +141,17 @@ export async function runSource(
 
     const written = await upsertListings(supabase, source.id, unique, runId!)
 
+    // Best-effort: the search index is additive. A Meilisearch hiccup must not
+    // fail an ingestion run whose actual job — getting rows into Postgres — has
+    // already succeeded; it downgrades the run to partial and says why instead.
+    const searchSyncError = await syncWrittenToSearchIndex(supabase, source.id, unique)
+
+    const finalStatus: SyncSummary["status"] = searchSyncError ? "partial" : status
+
     await supabase
       .from("sync_runs")
       .update({
-        status,
+        status: finalStatus,
         finished_at: new Date().toISOString(),
         duration_ms: Date.now() - startedAt,
         items_seen: items.length,
@@ -150,9 +159,13 @@ export async function runSource(
         items_updated: written.updated,
         items_skipped: skipped,
         item_errors: itemErrors,
-        error_message: truncated
-          ? "stopped early on the time budget; remaining pages resume next run"
-          : null,
+        error_message:
+          [
+            truncated ? "stopped early on the time budget; remaining pages resume next run" : null,
+            searchSyncError ? `search index sync failed: ${searchSyncError}` : null,
+          ]
+            .filter(Boolean)
+            .join("; ") || null,
       })
       .eq("id", runId)
 
@@ -160,15 +173,15 @@ export async function runSource(
       .from("auction_sources")
       .update({
         last_synced_at: new Date().toISOString(),
-        last_sync_status: status,
-        last_sync_error: null,
+        last_sync_status: finalStatus,
+        last_sync_error: searchSyncError,
       })
       .eq("id", source.id)
 
     return {
       ...base,
       runId,
-      status,
+      status: finalStatus,
       itemsSeen: items.length,
       itemsCreated: written.created,
       itemsUpdated: written.updated,
@@ -275,6 +288,41 @@ async function upsertListings(
   }
 
   return { created, updated }
+}
+
+/**
+ * Re-fetches the rows just written (with their generated id, defaults, and
+ * joined source) and pushes them into Meilisearch. Re-fetching rather than
+ * reconstructing documents from NormalizedListing keeps the index an honest
+ * mirror of what Postgres actually holds, id included.
+ *
+ * Returns an error message on failure, or null on success — never throws,
+ * since a search-index outage must not take ingestion down with it.
+ */
+async function syncWrittenToSearchIndex(
+  supabase: Supabase,
+  sourceId: string,
+  listings: NormalizedListing[]
+): Promise<string | null> {
+  if (listings.length === 0) return null
+
+  try {
+    const ids = listings.map((listing) => listing.external_id)
+    const { data, error } = await supabase
+      .from("listings")
+      .select("*, source:auction_sources(*)")
+      .eq("source_id", sourceId)
+      .in("external_id", ids)
+
+    if (error) throw new Error(error.message)
+
+    await syncListings((data ?? []).map((row) => mapListing(row as Record<string, unknown>)))
+    return null
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error("[ingestion] search index sync failed:", message)
+    return message
+  }
 }
 
 /**

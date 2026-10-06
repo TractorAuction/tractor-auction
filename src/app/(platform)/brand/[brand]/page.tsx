@@ -2,11 +2,12 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { searchListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 import { matchSlug, slugify, stateName } from "@/lib/seo/slug"
 
 async function resolveBrand(slug: string) {
-  const { makes } = await getFilterFacets()
+  const { makes } = await getSearchFacets()
   return matchSlug(slug, makes)
 }
 
@@ -33,7 +34,7 @@ export default async function BrandPage(props: PageProps<"/brand/[brand]">) {
 
   const [{ listings }, facets] = await Promise.all([
     searchListings({ make, sort_by: "ending_soon" }, 1, 24),
-    getFilterFacets(),
+    getSearchFacets(),
   ])
 
   // Models and states are drawn from this brand's own live listings, so every

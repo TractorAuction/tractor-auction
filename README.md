@@ -44,6 +44,12 @@ SUPABASE_SERVICE_ROLE_KEY=        # server-side only, never expose to the browse
 # Site
 NEXT_PUBLIC_SITE_URL=https://www.tractorauction.com   # canonical URLs + sitemap
 
+# Meilisearch — cloud.meilisearch.com → project → Settings → API Keys
+MEILISEARCH_HOST=                           # server-side, e.g. https://ms-xxxx.meilisearch.io
+MEILISEARCH_API_KEY=                        # Default Admin API Key — full access, server-only
+NEXT_PUBLIC_MEILISEARCH_HOST=               # same host, public
+NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY=         # Default Search API Key — search-only, safe to expose
+
 # Outreach CRM
 ANTHROPIC_API_KEY=                # AI email drafting
 RESEND_API_KEY=                   # sending
@@ -258,6 +264,65 @@ ships `sync_enabled = false`. See the header of `supabase/seed_sources.sql` for
 what each one is waiting on. The path that works without a third-party agreement
 is **Partner Feed (CSV)**: publish a sheet, point `feed_config.url` at its CSV
 export, enable it.
+
+## Search (Meilisearch)
+
+Search and the filter dropdowns run on Meilisearch Cloud, with Postgres as a
+fallback — a search index outage degrades search, it doesn't break it.
+
+### How it's split
+
+Meilisearch only ever answers "which ids match, in what order, with what facet
+counts." It does **not** hold the full listing — `lib/meilisearch/client.ts`'s
+`ListingDocument` is a flat, filterable/sortable/searchable subset. Once
+Meilisearch returns ranked ids, Postgres is queried `WHERE id IN (...)` for the
+actual rows (joined source, every column), in the order Meilisearch gave. This
+keeps Postgres the one place the full `Listing` shape is maintained — a renamed
+source or a new column never needs a reindex to show up correctly.
+
+| | Backed by | Fallback |
+|---|---|---|
+| `searchListingsSafe()` (lib/listings/search-index.ts) | Meilisearch + Postgres hydrate | Postgres `ilike` (`searchListings()`) |
+| `getSearchFacets()` | Meilisearch `facetDistribution` | Postgres distinct-scan (`getFilterFacets()`) |
+
+Both wrap their indexed path in try/catch; any failure — index not configured,
+Cloud instance unreachable, a malformed filter — logs and falls through to the
+Postgres function that worked before Meilisearch existed. Every search-facing
+page (`/search`, the homepage, brand/category/location pages) calls the `*Safe`
+versions, never the Meilisearch functions directly.
+
+### Keeping the index in sync
+
+Nothing polls. Every write path pushes its own change:
+
+- **Ingestion** (`lib/ingestion/run.ts`) re-fetches the rows it just wrote (with
+  id and defaults, not reconstructed from the raw feed) and calls `syncListings()`
+  after every run. A sync failure downgrades that run to `partial` and records why
+  in `sync_runs.error_message` — it does not fail the run, since the Postgres
+  write that mattered already succeeded.
+- **Admin actions** (`app/admin/actions.ts`) — toggling featured/sponsored,
+  changing a listing's status — call `patchListing(id, {...})` for a one-field
+  update, logged on failure, never thrown. The UI doesn't hang on a Meilisearch
+  hiccup.
+
+### Bootstrapping and recovery
+
+The index doesn't exist until something creates it. Bearer-gated like the other
+`/api/ingest/*` routes:
+
+```bash
+curl -X POST https://www.tractorauction.com/api/ingest/search-reindex \
+  -H "authorization: Bearer $CRON_SECRET"
+```
+
+This creates the index if missing, (re)applies `LISTINGS_INDEX_SETTINGS`, and
+does a full rebuild from Postgres. It's idempotent — every document is fully
+replaced, nothing merged — so it's also the fix any time the index is suspected
+to have drifted from Postgres (a failed sync that wasn't retried, a changed
+document shape after a code change).
+
+`/api/ingest/health` reports whether all four `MEILISEARCH_*`/`NEXT_PUBLIC_MEILISEARCH_*`
+vars are set and attempts a live connection, without ever printing a secret back.
 
 ## Documentation
 

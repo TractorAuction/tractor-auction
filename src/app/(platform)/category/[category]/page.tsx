@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { searchListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 import { EQUIPMENT_CATEGORIES, findCategory, slugify } from "@/lib/seo/slug"
 
 export async function generateMetadata(
@@ -28,7 +29,7 @@ export default async function CategoryPage(props: PageProps<"/category/[category
 
   const [{ listings }, facets] = await Promise.all([
     searchListings({ equipment_category: category.value, sort_by: "ending_soon" }, 1, 24),
-    getFilterFacets(),
+    getSearchFacets(),
   ])
 
   const related = [

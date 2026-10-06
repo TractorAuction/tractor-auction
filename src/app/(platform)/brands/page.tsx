@@ -2,7 +2,8 @@ import { ArrowRight, Tractor } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
 
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { searchListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 import { EQUIPMENT_CATEGORIES, slugify } from "@/lib/seo/slug"
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BrandsPage() {
-  const facets = await getFilterFacets()
+  const facets = await getSearchFacets()
 
   // Counting per make keeps the index honest: a brand with nothing live says so
   // rather than sending the visitor to an empty landing page.

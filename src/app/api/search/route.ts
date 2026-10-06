@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { parseFilters, parsePage } from "@/lib/listings/filters"
-import { DEFAULT_PAGE_SIZE, searchListings } from "@/lib/listings/queries"
+import { DEFAULT_PAGE_SIZE } from "@/lib/listings/queries"
+import { searchListingsSafe } from "@/lib/listings/search-index"
 import type { ApiResponse, SearchResult } from "@/types"
 
 const MAX_PAGE_SIZE = 100
@@ -18,7 +19,7 @@ export async function GET(
       : DEFAULT_PAGE_SIZE
 
   try {
-    const result = await searchListings(parseFilters(params), parsePage(params), pageSize)
+    const result = await searchListingsSafe(parseFilters(params), parsePage(params), pageSize)
     return NextResponse.json({ data: result, error: null })
   } catch (error) {
     console.error("[api/search]", error)

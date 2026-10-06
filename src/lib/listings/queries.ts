@@ -229,16 +229,32 @@ export type FilterFacets = {
  * so values are deduped here over a capped scan — fine at seed scale, and this
  * moves to Meilisearch facets once the search index is live (Day 7).
  */
+/** Small table, always fresh, shared by both the Postgres and Meilisearch
+ *  facet paths — neither needs its own copy of this query. */
+export async function getActiveSources(): Promise<FilterFacets["sources"]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from("auction_sources")
+    .select("id, name")
+    .eq("status", "active")
+    .order("name")
+
+  return (data ?? []).map((row) => ({
+    id: (row as Row).id as string,
+    name: (row as Row).name as string,
+  }))
+}
+
 export async function getFilterFacets(): Promise<FilterFacets> {
   const supabase = await createClient()
 
-  const [listingsResult, sourcesResult] = await Promise.all([
+  const [listingsResult, sources] = await Promise.all([
     supabase
       .from("listings")
       .select("make, location_state")
       .eq("status", "active")
       .limit(2000),
-    supabase.from("auction_sources").select("id, name").eq("status", "active").order("name"),
+    getActiveSources(),
   ])
 
   const makes = new Set<string>()
@@ -255,10 +271,7 @@ export async function getFilterFacets(): Promise<FilterFacets> {
   return {
     makes: Array.from(makes).sort(),
     states: Array.from(states).sort(),
-    sources: (sourcesResult.data ?? []).map((row) => ({
-      id: (row as Row).id as string,
-      name: (row as Row).name as string,
-    })),
+    sources,
   }
 }
 

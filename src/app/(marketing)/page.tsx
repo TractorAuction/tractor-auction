@@ -6,7 +6,8 @@ import { ListingCard } from "@/components/listing/listing-card"
 import { HeroSearch } from "@/components/search/hero-search"
 import { ImpressionTracker } from "@/components/listing/impression-tracker"
 import { getHomepagePlacement } from "@/lib/listings/promotions"
-import { getEndingSoon, getFeaturedListings, getFilterFacets } from "@/lib/listings/queries"
+import { getEndingSoon, getFeaturedListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 
 const partners = [
   { name: "AuctionTime", logo: "/sites/AuctionTime.svg" },
@@ -90,7 +91,7 @@ export default async function Home() {
   const [featured, endingSoon, facets, homepageSlot] = await Promise.all([
     getFeaturedListings(4),
     getEndingSoon(4),
-    getFilterFacets(),
+    getSearchFacets(),
     getHomepagePlacement(),
   ])
 

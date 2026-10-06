@@ -15,7 +15,7 @@ import {
   parsePage,
 } from "@/lib/listings/filters"
 import { getFeaturedSource, getPromotedListings, promotedIds } from "@/lib/listings/promotions"
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { getSearchFacets, searchListingsSafe } from "@/lib/listings/search-index"
 
 export const metadata: Metadata = {
   title: "Search Tractor Auctions — TractorAuction.com",
@@ -48,8 +48,8 @@ export default async function SearchPage(props: PageProps<"/search">) {
   // Promoted slots only appear on the first page — pushing paid rows onto every
   // page would bill the advertiser repeatedly for the same search.
   const [{ listings, total, pageSize }, facets, promoted, featuredSource] = await Promise.all([
-    searchListings(filters, page),
-    getFilterFacets(),
+    searchListingsSafe(filters, page),
+    getSearchFacets(),
     page === 1 ? getPromotedListings(filters, 3) : Promise.resolve([]),
     getFeaturedSource(),
   ])

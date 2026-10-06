@@ -2,7 +2,8 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { getFilterFacets, searchListings } from "@/lib/listings/queries"
+import { searchListings } from "@/lib/listings/queries"
+import { getSearchFacets } from "@/lib/listings/search-index"
 import { slugify, stateCodeFromSlug, stateName } from "@/lib/seo/slug"
 
 export async function generateMetadata(
@@ -32,7 +33,7 @@ export default async function LocationPage(props: PageProps<"/location/[state]">
 
   const [{ listings }, facets] = await Promise.all([
     searchListings({ location_state: code, sort_by: "ending_soon" }, 1, 24),
-    getFilterFacets(),
+    getSearchFacets(),
   ])
 
   // Only link to states we actually hold listings for, so the internal links
