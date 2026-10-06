@@ -89,7 +89,15 @@ export const gsaAuctionsConnector: Connector = {
         auction_company: "GSA Auctions",
         auction_end_date: str(lot.aucEndDt),
         current_bid: str(lot.highBidAmount),
-        images: str(lot.imageURL),
+        // lot.imageURL is NOT a usable public image: it 401s with "Token
+        // expired or invalid, please login again" even when authenticated
+        // with the same api.data.gov key that successfully reads /auctions.
+        // It's an internal PPMS endpoint that needs a logged-in GSA session,
+        // which the public API has no mechanism to grant a third party. GSA's
+        // own API response exposes a URL it doesn't actually make public —
+        // confirmed against the live endpoint, not assumed. Omitted entirely
+        // rather than stored and left to 401 in the browser: a listing with
+        // no real photo should say so, not show a broken image.
         original_url: str(lot.itemDescURL),
       })
     }
