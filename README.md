@@ -60,6 +60,7 @@ CRON_SECRET=
 
 # Alerts (Day 9)
 ALERTS_FROM_EMAIL=alerts@tractorauction.com
+ALERTS_UNSUBSCRIBE_SECRET=        # any long random string; `openssl rand -hex 32`
 ```
 
 Missing or placeholder Supabase values fail with an actionable message rather
@@ -76,6 +77,7 @@ supabase/migrations/0003_partners_and_roles.sql
 supabase/migrations/0004_auth.sql            profile trigger, admin check, per-user RLS
 supabase/migrations/0005_outreach_tiers.sql
 supabase/migrations/0006_ingestion.sql       feed config per source + sync_runs audit log
+supabase/migrations/0007_archive_and_alerts.sql   auction_results dedupe + alert tracking columns
 ```
 
 Then seed:
@@ -323,6 +325,32 @@ document shape after a code change).
 
 `/api/ingest/health` reports whether all four `MEILISEARCH_*`/`NEXT_PUBLIC_MEILISEARCH_*`
 vars are set and attempts a live connection, without ever printing a secret back.
+
+## Email alerts
+
+Two jobs, both driven by `/api/cron/alerts` on the same two-scheduler setup as
+ingestion (GitHub Actions every 6h, Vercel cron daily as backstop — see
+Scheduling above):
+
+- **Saved-search alerts** (`runSavedSearchAlerts`, `lib/alerts/run.ts`) re-runs
+  every `alert_enabled` saved search and emails whatever matches are new since
+  `last_alerted_at`. "New" means `created_at` — when ingestion wrote the row —
+  not when the source itself first listed the auction.
+- **Watchlist ending-soon alerts** (`runWatchlistEndingSoonAlerts`) emails once
+  per watchlist item whose auction closes within 24 hours.
+  `watchlist_items.ending_alert_sent_at` gates it so a tighter check interval
+  doesn't mean duplicate emails — it fires exactly once per item regardless of
+  how often the job runs.
+
+Both honor `profiles.email_alerts_enabled` (default `true`) and skip a user
+whose auction ends with no email on file. **Unsubscribe is one-click, no
+login:** every alert email carries a link to `/api/alerts/unsubscribe?token=...`
+signed with `ALERTS_UNSUBSCRIBE_SECRET` (HMAC-SHA256 of the user id) — the
+token alone proves whose alerts to turn off, since the visitor is reading
+email, not signed into a browser session.
+
+Emails go out via Resend from `ALERTS_FROM_EMAIL`, plain text (matches the
+existing outreach-send pattern — no HTML template system in the project yet).
 
 ## Documentation
 
