@@ -124,6 +124,14 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* CompareBar is fixed to the viewport bottom and renders nothing when no
+     listing is selected, so this reserves space only while it's actually
+     showing — otherwise it covers the last inch of the page (often the
+     footer) whenever a listing is selected. CompareBar is a direct child of
+     body (its CompareProvider parent is a Context.Provider, not a DOM node). */
+  body:has(> [data-compare-bar]) {
+    padding-bottom: 4.5rem;
+  }
   html {
     @apply font-sans;
   }

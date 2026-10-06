@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { CompareBar } from "@/components/listing/compare-bar";
+import { CompareProvider } from "@/components/listing/compare-context";
 
 import "./globals.css";
 
@@ -29,9 +31,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Header />
-        {children}
-        <Footer />
+        <CompareProvider>
+          <Header />
+          {children}
+          <Footer />
+          <CompareBar />
+        </CompareProvider>
       </body>
     </html>
   );

@@ -5,6 +5,8 @@ import Link from "next/link"
 import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
 import type { Listing } from "@/types"
 
+import { CompareToggle } from "./compare-toggle"
+
 export function ListingCard({ listing }: { listing: Listing }) {
   const location = formatLocation(listing.location_city, listing.location_state)
   const specs = [
@@ -36,6 +38,11 @@ export function ListingCard({ listing }: { listing: Listing }) {
             </span>
           )}
         </div>
+
+        <CompareToggle
+          item={{ id: listing.id, title, image: cover }}
+          className="absolute right-2 top-2 z-10"
+        />
 
         {/* Only ever the source's own photo. A listing with no photo says so
             rather than borrowing a stock tractor, which would misrepresent the

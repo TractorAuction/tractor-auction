@@ -7,6 +7,8 @@ export const DEFAULT_PAGE_SIZE = 24
 // can render the auction-house badge without a second round trip.
 const LISTING_SELECT = "*, source:auction_sources(*)"
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 type Row = Record<string, unknown>
 
 /** Postgres nulls become undefined so optional fields match the Listing type. */
@@ -181,6 +183,29 @@ export async function getListing(id: string): Promise<Listing | null> {
   }
 
   return data ? mapListing(data as Row) : null
+}
+
+/**
+ * Batch fetch for the comparison page. Returns listings in the order the ids
+ * were requested — the compare page's column order is the order the visitor
+ * selected things in, and Postgres doesn't promise to preserve `IN (...)` order.
+ * A malformed or since-deleted id is silently dropped rather than erroring the
+ * whole comparison.
+ */
+export async function getListingsByIds(ids: string[]): Promise<Listing[]> {
+  const uuids = ids.filter((id) => UUID_RE.test(id))
+  if (uuids.length === 0) return []
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.from("listings").select(LISTING_SELECT).in("id", uuids)
+
+  if (error) throw new Error(`Failed to load listings: ${error.message}`)
+
+  const byId = new Map((data ?? []).map((row) => [(row as Row).id as string, row as Row]))
+  return uuids
+    .map((id) => byId.get(id))
+    .filter((row): row is Row => Boolean(row))
+    .map((row) => mapListing(row))
 }
 
 /** Same make first, then anything else in the category, never the listing itself. */

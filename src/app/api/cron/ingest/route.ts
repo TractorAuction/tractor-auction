@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { requireIngestSecret } from "@/lib/ingestion/authorize"
 import { expireEndedListings } from "@/lib/ingestion/expire"
 import { runDueSources } from "@/lib/ingestion/run"
+import { archiveEndedListings } from "@/lib/listings/archive-results"
 
 /**
  * Production ingestion entry point, driven by Vercel Cron (see vercel.json).
@@ -48,12 +49,17 @@ async function ingest(request: Request) {
       dryRun,
     })
     const expired = dryRun ? 0 : await expireEndedListings()
+    // Archiving reads whatever is expired/sold right now, so it runs after the
+    // sweep above — a listing that just expired this tick is archived the
+    // same tick rather than waiting for the next one.
+    const archived = dryRun ? 0 : (await archiveEndedListings()).archived
 
     return NextResponse.json({
       data: {
         dryRun,
         sourcesRun: summaries.length,
         expired,
+        archived,
         totals: summaries.reduce(
           (accumulator, summary) => ({
             seen: accumulator.seen + summary.itemsSeen,
