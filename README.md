@@ -360,6 +360,27 @@ email, not signed into a browser session.
 Emails go out via Resend from `ALERTS_FROM_EMAIL`, plain text (matches the
 existing outreach-send pattern — no HTML template system in the project yet).
 
+## Outreach drafting
+
+`/api/outreach/draft-batch` (bearer-gated, same pattern as `/api/ingest/*`)
+drafts through the real generation path — `generateOutreachEmail()`, same
+system prompt, same model, same per-tier angle logic the admin composer
+uses — without an interactive admin session. Drafts only: nothing is sent,
+no contact's status or dates change. That still only happens through
+`/api/outreach/send`, which a signed-in admin triggers after reviewing a draft.
+
+```bash
+curl -X POST https://www.tractorauction.com/api/outreach/draft-batch \
+  -H "authorization: Bearer $CRON_SECRET" \
+  -H "content-type: application/json" \
+  -d '{"items":[{"contactId":"<uuid>"},{"overrides":{"company_name":"Ad-hoc Co","tier":1}}]}'
+```
+
+Each item is either `{contactId}` (fetches the real row) or
+`{overrides: {...}}` standalone, for drafting a combined ask covering two
+contacts that are really the same company (e.g. after an acquisition)
+without a DB write.
+
 ## Documentation
 
 | File | Contents |
