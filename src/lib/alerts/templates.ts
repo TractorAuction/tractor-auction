@@ -24,10 +24,13 @@ function footer(unsubscribeUrl: string): string {
 /** New listings matching a saved search since it was last checked. */
 export function savedSearchMatchesEmail({
   searchName,
+  searchPath,
   listings,
   unsubscribeUrl,
 }: {
   searchName: string
+  /** "/search?make=..." for this saved search, so "See all" reopens it. */
+  searchPath: string
   listings: Listing[]
   unsubscribeUrl: string
 }): AlertEmail {
@@ -41,7 +44,7 @@ export function savedSearchMatchesEmail({
     "",
     listings.map(listingLine).join("\n\n"),
     "",
-    `See all matches: ${SITE_URL}/search`,
+    `See all matches: ${SITE_URL}${searchPath}`,
     footer(unsubscribeUrl),
   ].join("\n")
 

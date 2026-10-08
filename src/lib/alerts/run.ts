@@ -1,5 +1,6 @@
 import { Resend } from "resend"
 
+import { buildSearchParams } from "@/lib/listings/filters"
 import { mapListing } from "@/lib/listings/queries"
 import { searchListingsSafe } from "@/lib/listings/search-index"
 import { SITE_URL } from "@/lib/seo/slug"
@@ -70,6 +71,7 @@ export async function runSavedSearchAlerts(): Promise<AlertRunResult> {
 
       const template = savedSearchMatchesEmail({
         searchName: (row.name as string | null) ?? "Saved search",
+        searchPath: `/search?${buildSearchParams(row.filters as SearchFilters).toString()}`,
         listings: newMatches.slice(0, 10),
         unsubscribeUrl: unsubscribeUrlFor(row.user_id as string),
       })
