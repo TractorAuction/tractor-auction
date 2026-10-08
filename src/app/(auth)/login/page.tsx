@@ -54,7 +54,15 @@ export default async function LoginPage(props: PageProps<"/login">) {
         </label>
 
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium text-foreground">Password</span>
+          <span className="flex items-center justify-between text-sm font-medium text-foreground">
+            Password
+            <Link
+              href="/forgot-password"
+              className="text-xs font-normal text-primary hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </span>
           <input
             name="password"
             type="password"

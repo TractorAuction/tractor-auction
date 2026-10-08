@@ -136,3 +136,22 @@ export function hasActiveFilters(filters: SearchFilters): boolean {
     ([key, value]) => key !== "sort_by" && value !== undefined && value !== ""
   )
 }
+
+/** One-line human summary, used as a saved search's default name and label. */
+export function describeFilters(filters: SearchFilters): string {
+  const category = EQUIPMENT_CATEGORIES.find((entry) => entry.value === filters.equipment_category)
+  const parts = [
+    filters.query ? `“${filters.query}”` : null,
+    category && !filters.make ? category.label : null,
+    [filters.make, filters.model].filter(Boolean).join(" ") || null,
+    filters.location_state,
+    filters.zip ? (filters.radius_miles ? `within ${filters.radius_miles} mi of ${filters.zip}` : `near ${filters.zip}`) : null,
+    filters.year_min || filters.year_max
+      ? `${filters.year_min ?? "any"}–${filters.year_max ?? "any"}`
+      : null,
+    filters.hours_max ? `under ${filters.hours_max.toLocaleString("en-US")} hrs` : null,
+    filters.price_max ? `under $${filters.price_max.toLocaleString("en-US")}` : null,
+  ].filter(Boolean)
+
+  return parts.length > 0 ? parts.join(" · ") : "All auctions"
+}

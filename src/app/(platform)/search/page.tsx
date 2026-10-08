@@ -2,6 +2,7 @@ import { SlidersHorizontal } from "lucide-react"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
+import { SaveSearchButton } from "@/components/account/save-search-button"
 import { ImpressionTracker } from "@/components/listing/impression-tracker"
 import { ListingCard } from "@/components/listing/listing-card"
 import { ListingGrid } from "@/components/listing/listing-grid"
@@ -10,6 +11,7 @@ import { Pagination } from "@/components/search/pagination"
 import { SortSelect } from "@/components/search/sort-select"
 import {
   buildSearchParams,
+  describeFilters,
   hasActiveFilters,
   parseFilters,
   parsePage,
@@ -17,6 +19,7 @@ import {
 import { getFeaturedSource, getPromotedListings, promotedIds } from "@/lib/listings/promotions"
 import { getSearchFacets, searchListingsSafe } from "@/lib/listings/search-index"
 import { findCategory } from "@/lib/seo/slug"
+import { createClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "Search Tractor Auctions — TractorAuction.com",
@@ -55,6 +58,26 @@ export default async function SearchPage(props: PageProps<"/search">) {
     getFeaturedSource(),
   ])
 
+  // Who is looking, and whether they arrived from "Edit filters" on one of
+  // their saved searches (?saved=<id>), which turns Save into Update.
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const savedParam = Array.isArray(rawParams.saved) ? rawParams.saved[0] : rawParams.saved
+  let editing: { id: string; name: string } | undefined
+  if (user && savedParam) {
+    const { data } = await supabase
+      .from("saved_searches")
+      .select("id, name")
+      .eq("id", savedParam)
+      .eq("user_id", user.id)
+      .maybeSingle()
+    if (data) editing = { id: data.id as string, name: (data.name as string) ?? "Saved search" }
+  }
+  const currentQuery = buildSearchParams(filters, page).toString()
+  const returnTo = currentQuery ? `/search?${currentQuery}` : "/search"
+
   const promotedSet = promotedIds(promoted)
   // Organic results never repeat a listing already shown in the promoted strip.
   const organic = listings.filter((listing) => !promotedSet.has(listing.id))
@@ -73,6 +96,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
     <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-6 py-8">
       <ImpressionTracker placementIds={impressionIds} />
 
+      <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold text-foreground">
           {filters.query
@@ -84,6 +108,14 @@ export default async function SearchPage(props: PageProps<"/search">) {
             ? "No matching auctions"
             : `Showing ${firstResult}–${lastResult} of ${total.toLocaleString()} auctions`}
         </p>
+      </div>
+        <SaveSearchButton
+          filters={filters}
+          defaultName={describeFilters(filters)}
+          signedIn={Boolean(user)}
+          returnTo={returnTo}
+          editing={editing}
+        />
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">

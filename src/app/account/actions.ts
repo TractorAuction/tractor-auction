@@ -75,27 +75,74 @@ export async function setSearchAlert(formData: FormData) {
   revalidatePath("/account/alerts")
 }
 
-export async function saveSearch(formData: FormData) {
-  const name = formData.get("name")
-  const filters = formData.get("filters")
+export type SaveSearchState = { ok: boolean; error?: string; id?: string }
 
-  if (typeof name !== "string" || typeof filters !== "string") return
+function parseFiltersField(value: FormDataEntryValue | null): Record<string, unknown> | null {
+  if (typeof value !== "string") return null
+  try {
+    const parsed: unknown = JSON.parse(value)
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : null
+  } catch {
+    return null
+  }
+}
+
+/** Creates a saved search, or with an `id` replaces that search's filters
+ *  (the "Edit filters → Update saved search" flow). */
+export async function saveSearch(
+  _previous: SaveSearchState,
+  formData: FormData
+): Promise<SaveSearchState> {
+  const id = formData.get("id")
+  const name = String(formData.get("name") ?? "").trim()
+  const alert = formData.get("alert_enabled") === "on"
+  const filters = parseFiltersField(formData.get("filters"))
+  if (!filters) return { ok: false, error: "Could not read the current filters." }
+
+  const { supabase, user } = await currentUser()
+  if (!user) return { ok: false, error: "Log in to save searches." }
+
+  if (typeof id === "string" && id) {
+    const { error } = await supabase
+      .from("saved_searches")
+      .update({ filters })
+      .eq("id", id)
+      .eq("user_id", user.id)
+    if (error) return { ok: false, error: "Could not update this saved search." }
+    revalidatePath("/account/saved-searches")
+    return { ok: true, id }
+  }
+
+  const { data, error } = await supabase
+    .from("saved_searches")
+    .insert({
+      user_id: user.id,
+      name: name.slice(0, 120) || "Saved search",
+      filters,
+      alert_enabled: alert,
+    })
+    .select("id")
+    .single()
+
+  if (error) return { ok: false, error: "Could not save this search." }
+
+  revalidatePath("/account/saved-searches")
+  revalidatePath("/account/alerts")
+  return { ok: true, id: data.id as string }
+}
+
+export async function renameSavedSearch(formData: FormData) {
+  const id = formData.get("id")
+  const name = String(formData.get("name") ?? "").trim().slice(0, 120)
+  if (typeof id !== "string" || !id || !name) return
 
   const { supabase, user } = await currentUser()
   if (!user) return
 
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(filters)
-  } catch {
-    return
-  }
-
-  await supabase.from("saved_searches").insert({
-    user_id: user.id,
-    name: name.trim() || "Saved search",
-    filters: parsed,
-  })
+  await supabase.from("saved_searches").update({ name }).eq("id", id).eq("user_id", user.id)
 
   revalidatePath("/account/saved-searches")
+  revalidatePath("/account/alerts")
 }

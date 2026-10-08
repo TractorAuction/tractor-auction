@@ -44,6 +44,10 @@ export function Filters({
     const existingSort = searchParams.get(FILTER_PARAMS.sort_by)
     if (existingSort) params.set(FILTER_PARAMS.sort_by, existingSort)
 
+    // Editing a saved search: keep the marker so "Update saved search" stays.
+    const savedSearch = searchParams.get("saved")
+    if (savedSearch) params.set("saved", savedSearch)
+
     for (const [key, value] of new FormData(event.currentTarget).entries()) {
       if (typeof value === "string" && value.trim()) params.set(key, value.trim())
     }
@@ -56,6 +60,8 @@ export function Filters({
     const params = new URLSearchParams()
     const existingQuery = searchParams.get(FILTER_PARAMS.query)
     if (existingQuery) params.set(FILTER_PARAMS.query, existingQuery)
+    const savedSearch = searchParams.get("saved")
+    if (savedSearch) params.set("saved", savedSearch)
     router.push(`/search?${params.toString()}`)
   }
 

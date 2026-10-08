@@ -1,9 +1,9 @@
 import { Search } from "lucide-react"
 import Link from "next/link"
 
-import { removeSavedSearch, setSearchAlert } from "@/app/account/actions"
+import { removeSavedSearch, renameSavedSearch, setSearchAlert } from "@/app/account/actions"
 import { Button } from "@/components/ui/button"
-import { buildSearchParams } from "@/lib/listings/filters"
+import { buildSearchParams, describeFilters } from "@/lib/listings/filters"
 import { createClient } from "@/lib/supabase/server"
 import { formatDate } from "@/lib/format"
 import type { SearchFilters } from "@/types"
@@ -16,26 +16,13 @@ type SavedSearchRow = {
   created_at: string
 }
 
-/** Turns stored filters back into the search URL that produced them. */
-function searchHref(filters: SearchFilters) {
+/** Turns stored filters back into the search URL that produced them. With
+ *  `editId`, the search page offers "Update saved search" instead of Save. */
+function searchHref(filters: SearchFilters, editId?: string) {
   const params = buildSearchParams(filters ?? {})
+  if (editId) params.set("saved", editId)
   const query = params.toString()
   return query ? `/search?${query}` : "/search"
-}
-
-function describe(filters: SearchFilters) {
-  const parts = [
-    filters.query ? `“${filters.query}”` : null,
-    filters.make,
-    filters.model,
-    filters.location_state,
-    filters.year_min || filters.year_max
-      ? `${filters.year_min ?? "any"}–${filters.year_max ?? "any"}`
-      : null,
-    filters.hours_max ? `under ${filters.hours_max.toLocaleString()} hrs` : null,
-  ].filter(Boolean)
-
-  return parts.length > 0 ? parts.join(" · ") : "All auctions"
 }
 
 export default async function SavedSearchesPage() {
@@ -98,14 +85,41 @@ export default async function SavedSearchesPage() {
                   {search.name}
                 </Link>
                 <span className="text-xs text-muted-foreground">
-                  {describe(search.filters)}
+                  {describeFilters(search.filters)}
                 </span>
                 <span className="text-xs text-muted-foreground">
                   Saved {formatDate(search.created_at)}
                 </span>
+                <details className="mt-1 text-xs">
+                  <summary className="w-fit cursor-pointer text-primary hover:underline">
+                    Rename
+                  </summary>
+                  <form action={renameSavedSearch} className="mt-2 flex items-center gap-2">
+                    <input type="hidden" name="id" value={search.id} />
+                    <input
+                      name="name"
+                      defaultValue={search.name}
+                      maxLength={120}
+                      required
+                      aria-label="Saved search name"
+                      className="h-8 rounded-lg border border-border bg-background px-2 text-sm outline-none focus-visible:border-ring"
+                    />
+                    <Button type="submit" size="sm" variant="outline">
+                      Save
+                    </Button>
+                  </form>
+                </details>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href={searchHref(search.filters, search.id)} />}
+                >
+                  Edit filters
+                </Button>
                 <form action={setSearchAlert}>
                   <input type="hidden" name="id" value={search.id} />
                   <input type="hidden" name="enabled" value={String(!search.alert_enabled)} />
@@ -130,8 +144,8 @@ export default async function SavedSearchesPage() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Alert emails start going out once the daily alert job is live (Day 9). Turning
-        alerts on now records the preference.
+        With alerts on, we check for new matching auctions several times a day and email
+        you when there are any.
       </p>
     </>
   )

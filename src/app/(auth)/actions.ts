@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
+import { SITE_URL } from "@/lib/seo/slug"
 import { createClient } from "@/lib/supabase/server"
 
 function text(value: FormDataEntryValue | null) {
@@ -75,4 +76,57 @@ export async function signOut() {
 
   revalidatePath("/", "layout")
   redirect("/")
+}
+
+/**
+ * Sends the reset email. The link lands on /callback, which exchanges the code
+ * for a session in this same browser and forwards to /reset-password.
+ *
+ * The response is identical whether or not the address has an account, so
+ * this form cannot be used to discover who is registered.
+ */
+export async function requestPasswordReset(formData: FormData) {
+  const email = text(formData.get("email"))
+
+  if (!email) {
+    redirect(`/forgot-password?error=${encodeURIComponent("Enter your email address.")}`)
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${SITE_URL}/callback?next=/reset-password`,
+  })
+
+  // Rate limiting is the one failure worth surfacing; everything else gets the
+  // same neutral confirmation.
+  if (error?.status === 429) {
+    redirect(
+      `/forgot-password?error=${encodeURIComponent("Too many requests. Wait a few minutes and try again.")}`
+    )
+  }
+  if (error) console.error("[auth] resetPasswordForEmail:", error.message)
+
+  redirect("/forgot-password?sent=1")
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = text(formData.get("password"))
+  const confirm = text(formData.get("confirm"))
+
+  if (password.length < 8) {
+    redirect(`/reset-password?error=${encodeURIComponent("Use at least 8 characters.")}`)
+  }
+  if (password !== confirm) {
+    redirect(`/reset-password?error=${encodeURIComponent("The two passwords do not match.")}`)
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    redirect(`/reset-password?error=${encodeURIComponent(error.message)}`)
+  }
+
+  revalidatePath("/", "layout")
+  redirect("/account/watchlist?password_updated=1")
 }
