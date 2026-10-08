@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     subject?: string
     body?: string
     followUpDays?: number
+    /** Set only after the admin has confirmed a second email to the same address. */
+    allowDuplicate?: boolean
   } | null
 
   if (!body?.contactId || !body.to || !body.subject || !body.body) {
@@ -49,6 +51,32 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  const supabase = createAdminClient()
+
+  // Two CRM rows can share one inbox (Ritchie Bros. owns IronPlanet and both
+  // list the same person). A second cold email to someone we just contacted
+  // reads as spam, so it needs an explicit confirmation.
+  if (!body.allowDuplicate) {
+    const since = new Date(Date.now() - 30 * 86_400_000).toISOString()
+    const { data: earlier } = await supabase
+      .from("outreach_contacts")
+      .select("company_name")
+      .ilike("contact_email", body.to.trim())
+      .neq("id", body.contactId)
+      .gte("outreach_date", since)
+      .limit(1)
+
+    if (earlier && earlier.length > 0) {
+      return NextResponse.json(
+        {
+          data: null,
+          error: `${body.to} was already emailed for ${earlier[0].company_name} in the last 30 days. Not sent.`,
+        },
+        { status: 409 }
+      )
+    }
+  }
+
   const resend = new Resend(apiKey)
 
   const { data, error } = await resend.emails.send({
@@ -67,7 +95,6 @@ export async function POST(request: NextRequest) {
   const now = new Date()
   const followUp = new Date(now.getTime() + (body.followUpDays ?? 7) * 86_400_000)
 
-  const supabase = createAdminClient()
   await supabase
     .from("outreach_contacts")
     .update({

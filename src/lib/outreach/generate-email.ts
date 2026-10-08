@@ -13,8 +13,8 @@ const MODEL = "claude-haiku-4-5"
 const SYSTEM_PROMPT = `You write partnership outreach emails for TractorAuction.com.
 
 ABOUT THE PLATFORM
-TractorAuction.com is building the leading search and discovery platform for
-agricultural equipment auctions. It aggregates listings from auction companies so
+TractorAuction.com is a search and discovery platform for agricultural equipment
+auctions in the United States. It aggregates listings from auction companies so
 buyers can search one place, then sends those buyers to the original auction site
 to bid.
 
@@ -38,6 +38,14 @@ RULES FOR EVERY EMAIL
 - Never invent facts about the recipient's business, traffic, or inventory. Use
   only what you are given. If you do not know something, do not mention it.
 - Never claim TractorAuction.com already lists them unless told it does.
+- Never compliment or characterize the recipient: nothing about their size,
+  scale, reach, reputation, or the strength or quality of their inventory. The
+  angle notes you are given are internal guidance; never restate them.
+- Never describe our coverage as wider than the United States.
+- The only commercial term you may state is that listing is free. Never mention
+  revenue share, pricing, exclusivity, contracts, or anything else not given.
+- Never name a parent company, owner, or any other business unless told to.
+- Write as "we" throughout. Never "I".
 - Sign off exactly as: The TractorAuction.com Partnership Team
 
 Return your answer in exactly this shape, with nothing before or after:
@@ -99,7 +107,7 @@ export async function generateOutreachEmail(
         ``,
         `Stage: ${stage.brief}`,
         ``,
-        `Angle for this company (${angle.name}):`,
+        `Angle for this company (${angle.name}). Internal guidance only, never quote or paraphrase it to the recipient:`,
         angle.lead,
         angle.caution ? `\nImportant: ${angle.caution}` : "",
         ``,
