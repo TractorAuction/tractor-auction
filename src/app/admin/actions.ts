@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache"
 
 import { requireAdmin } from "@/lib/auth/require-admin"
-import { patchListing } from "@/lib/meilisearch/sync"
+import { mapListing } from "@/lib/listings/queries"
+import { patchListing, syncListings } from "@/lib/meilisearch/sync"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { ListingDocument } from "@/lib/meilisearch/client"
 
@@ -249,6 +250,108 @@ export async function approvePartnerAsSource(formData: FormData) {
 
   revalidatePath("/admin/partners")
   revalidatePath("/admin/sources")
+}
+
+/**
+ * Publishes a partner's hand-entered listing. It becomes an ordinary listing
+ * under the partner's auction source (keyed partner-<submission id>, so a
+ * second approval cannot duplicate it) and goes straight into search.
+ */
+export async function approvePartnerSubmission(formData: FormData) {
+  const supabase = await admin()
+  const id = text(formData.get("id"))
+  if (!id) return
+
+  const { data: submission } = await supabase
+    .from("partner_submissions")
+    .select("*, partner:partners(id, source_id, company_name)")
+    .eq("id", id)
+    .maybeSingle()
+  if (!submission) return
+
+  const record = submission as Record<string, unknown>
+  const partner = record.partner as Record<string, unknown> | null
+  const sourceId = partner?.source_id as string | null
+  if (!sourceId) return
+
+  const now = new Date().toISOString()
+  const endDate = record.auction_end_date as string | null
+  const { data: listing, error } = await supabase
+    .from("listings")
+    .upsert(
+      {
+        source_id: sourceId,
+        external_id: `partner-${id}`,
+        title: record.title,
+        equipment_category: record.equipment_category ?? "other",
+        make: record.make,
+        model: record.model,
+        year: record.year,
+        horsepower: record.horsepower,
+        hours: record.hours,
+        condition: record.condition,
+        location_city: record.location_city,
+        location_state: record.location_state,
+        auction_company: partner?.company_name,
+        auction_end_date: endDate,
+        current_bid: record.current_bid,
+        description: record.description,
+        original_url: record.original_url,
+        status: endDate && new Date(endDate).getTime() < Date.now() ? "expired" : "active",
+        last_synced_at: now,
+        updated_at: now,
+      },
+      { onConflict: "source_id,external_id" }
+    )
+    .select("*, source:auction_sources(*)")
+    .single()
+
+  if (error || !listing) {
+    console.error("[admin] approvePartnerSubmission:", error?.message)
+    return
+  }
+
+  await supabase
+    .from("partner_submissions")
+    .update({ status: "approved", listing_id: listing.id, reviewed_at: now })
+    .eq("id", id)
+
+  // A partner publishing by hand has no feed to switch on, so the source goes
+  // live with its first approved listing.
+  await supabase
+    .from("auction_sources")
+    .update({ status: "active" })
+    .eq("id", sourceId)
+    .eq("status", "pending")
+
+  try {
+    await syncListings([mapListing(listing as Record<string, unknown>)])
+  } catch (indexError) {
+    console.error("[admin] search index sync failed for partner listing:", indexError)
+  }
+
+  revalidatePath("/admin/partners")
+  revalidatePath("/admin/listings")
+  revalidatePath("/partner/dashboard")
+  revalidatePath("/search")
+}
+
+export async function rejectPartnerSubmission(formData: FormData) {
+  const supabase = await admin()
+  const id = text(formData.get("id"))
+  if (!id) return
+
+  await supabase
+    .from("partner_submissions")
+    .update({
+      status: "rejected",
+      review_notes: text(formData.get("review_notes")),
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+
+  revalidatePath("/admin/partners")
+  revalidatePath("/partner/dashboard")
 }
 
 // ---------------------------------------------------------------------------

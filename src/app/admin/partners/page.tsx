@@ -1,8 +1,14 @@
-import { approvePartnerAsSource, setPartnerStatus } from "@/app/admin/actions"
+import {
+  approvePartnerAsSource,
+  approvePartnerSubmission,
+  rejectPartnerSubmission,
+  setPartnerStatus,
+} from "@/app/admin/actions"
 import { Badge, DataTable } from "@/components/admin/data-table"
 import { Button } from "@/components/ui/button"
 import { getPartners, type Partner } from "@/lib/admin/queries"
-import { formatDate } from "@/lib/format"
+import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 const statusTones = {
   pending: "warning",
@@ -20,7 +26,15 @@ function value(params: Record<string, string | string[] | undefined>, key: strin
 export default async function AdminPartnersPage(props: PageProps<"/admin/partners">) {
   const params = await props.searchParams
   const status = value(params, "status")
-  const partners = await getPartners(status)
+  const [partners, { data: submissionRows }] = await Promise.all([
+    getPartners(status),
+    createAdminClient()
+      .from("partner_submissions")
+      .select("*, partner:partners(company_name, source_id)")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }),
+  ])
+  const submissions = (submissionRows ?? []) as Array<Record<string, unknown>>
 
   const fieldClass =
     "h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -148,11 +162,86 @@ export default async function AdminPartnersPage(props: PageProps<"/admin/partner
                     </Button>
                   </form>
                 )}
+                {row.status !== "pending" && (
+                  <form action={setPartnerStatus}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <input type="hidden" name="status" value="pending" />
+                    <Button type="submit" size="xs" variant="ghost">
+                      Mark pending
+                    </Button>
+                  </form>
+                )}
               </div>
             ),
           },
         ]}
       />
+
+      {/* Listings typed in by approved partners. Nothing here is public until
+          approved, which publishes it under the partner's auction source. */}
+      <section className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Listing submissions</h2>
+          <p className="text-sm text-muted-foreground">
+            {submissions.length === 0
+              ? "No listings waiting for review."
+              : `${submissions.length} waiting for review. Check the auction link before approving.`}
+          </p>
+        </div>
+        {submissions.map((submission) => {
+          const partner = submission.partner as Record<string, unknown> | null
+          return (
+            <div
+              key={submission.id as string}
+              className="flex flex-wrap items-start justify-between gap-3 rounded-lg border border-border p-4"
+            >
+              <div className="flex min-w-60 flex-1 flex-col gap-1 text-sm">
+                <span className="font-medium text-foreground">{submission.title as string}</span>
+                <span className="text-xs text-muted-foreground">
+                  {[
+                    partner?.company_name as string,
+                    submission.equipment_category as string,
+                    [submission.year, submission.make, submission.model].filter(Boolean).join(" "),
+                    submission.hours ? `${Number(submission.hours).toLocaleString()} hrs` : null,
+                    formatLocation(
+                      submission.location_city as string | null,
+                      submission.location_state as string | null
+                    ),
+                    formatCurrency(submission.current_bid as number | null),
+                    submission.auction_end_date
+                      ? `ends ${formatDate(submission.auction_end_date as string)}`
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+                <a
+                  href={submission.original_url as string}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="w-fit truncate text-xs text-primary hover:underline"
+                >
+                  {submission.original_url as string}
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <form action={approvePartnerSubmission}>
+                  <input type="hidden" name="id" value={submission.id as string} />
+                  <Button type="submit" size="xs" disabled={!partner?.source_id}>
+                    Approve &amp; publish
+                  </Button>
+                </form>
+                <form action={rejectPartnerSubmission}>
+                  <input type="hidden" name="id" value={submission.id as string} />
+                  <Button type="submit" size="xs" variant="outline">
+                    Reject
+                  </Button>
+                </form>
+              </div>
+            </div>
+          )
+        })}
+      </section>
     </>
   )
 }
