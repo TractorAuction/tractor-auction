@@ -7,9 +7,9 @@
 ## PRIORITY 1 — BLOCKERS (Fix before anything else)
 
 ### 1. Logo / Header (Done)
-- [ ] Replace black box logo with transparent background version
-- [ ] Logo must integrate naturally into the dark header
-- [ ] Test on mobile and desktop 
+- [x] Replace black box logo with transparent background version
+- [x] Logo must integrate naturally into the dark header
+- [x] Test on mobile and desktop 
 
 ### 2. Fake Inventory Claims
 - [x] Remove or update "1000+ Active Auctions Updated Daily" on homepage
@@ -197,19 +197,19 @@ Test these specifically on mobile:
 - [x] Search filters panel opens and works
 - [x] Listing cards display correctly
 - [x] Compare bar does not break layout
-- [ ] Menus open and close
-- [ ] Forms are usable
+- [x] Menus open and close
+- [x] Forms are usable
 - [x] Buttons are tappable (min 44px touch target)
 
 ### 22. UI Polish Pass
-- [ ] Header: logo integration, spacing, nav consistency
-- [ ] ListingCard: better visual hierarchy, image placeholder, auction end time, source badge
-- [ ] Typography: consistent heading sizes and weights across pages
-- [ ] Spacing: consistent padding and margins across all pages
-- [ ] Button consistency: same style, size, and color for same action across all pages
-- [ ] Empty states: search with no results, empty watchlist, no saved searches (each needs a helpful message)
-- [ ] Featured and sponsored listing presentation should feel premium
-- [ ] Overall feel: credible national platform, not a dev build
+- [x] Header: logo integration, spacing, nav consistency
+- [x] ListingCard: better visual hierarchy, image placeholder, auction end time, source badge
+- [x] Typography: consistent heading sizes and weights across pages
+- [x] Spacing: consistent padding and margins across all pages
+- [x] Button consistency: same style, size, and color for same action across all pages
+- [x] Empty states: search with no results, empty watchlist, no saved searches (each needs a helpful message)
+- [x] Featured and sponsored listing presentation should feel premium
+- [x] Overall feel: credible national platform, not a dev build
 
 ---
 
