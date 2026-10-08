@@ -1,10 +1,12 @@
 "use client"
 
-import { X } from "lucide-react"
+import { Check, Share2, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
 import { slugify } from "@/lib/seo/slug"
 import type { Listing } from "@/types"
@@ -13,6 +15,8 @@ import { ListingImagePlaceholder } from "./listing-image-placeholder"
 
 /** One row per attribute, each listing's value read off the same field. */
 const ROWS: Array<{ label: string; value: (listing: Listing) => React.ReactNode }> = [
+  { label: "Make", value: (l) => l.make ?? "—" },
+  { label: "Model", value: (l) => l.model ?? "—" },
   { label: "Year", value: (l) => l.year ?? "—" },
   { label: "Horsepower", value: (l) => (l.horsepower ? `${l.horsepower} HP` : "—") },
   { label: "Hours", value: (l) => l.hours?.toLocaleString() ?? "—" },
@@ -39,7 +43,32 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
     router.push(`/compare${params}`)
   }
 
+  const [copied, setCopied] = useState(false)
+
+  /** The URL already encodes the comparison; sharing is handing it over. */
+  async function share() {
+    const url = window.location.href
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Tractor comparison", url })
+        return
+      } catch {
+        // Share sheet dismissed; fall through to copying the link.
+      }
+    }
+    await navigator.clipboard.writeText(url)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   return (
+    <div className="flex flex-col gap-3">
+    <div className="flex justify-end">
+      <Button variant="outline" size="sm" onClick={share}>
+        {copied ? <Check className="size-3.5 text-primary" /> : <Share2 className="size-3.5" />}
+        {copied ? "Link copied" : "Share comparison"}
+      </Button>
+    </div>
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
@@ -93,9 +122,10 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
         <tbody>
           {ROWS.map((row) => (
             <tr key={row.label} className="border-b border-border last:border-0">
+              {/* Pinned so the label stays visible while a phone scrolls sideways. */}
               <th
                 scope="row"
-                className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                className="sticky left-0 z-10 bg-background px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
               >
                 {row.label}
               </th>
@@ -125,6 +155,7 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
           </tr>
         </tbody>
       </table>
+    </div>
     </div>
   )
 }
