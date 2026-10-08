@@ -77,7 +77,7 @@ export default async function SearchPage(props: PageProps<"/search">) {
         <h1 className="text-2xl font-semibold text-foreground">
           {filters.query
             ? `Results for “${filters.query}”`
-            : `${findCategory(filters.equipment_category ?? "")?.label ?? "All Equipment"} Auctions`}
+            : (findCategory(filters.equipment_category ?? "")?.label ?? "All Equipment")}
         </h1>
         <p className="text-sm text-muted-foreground">
           {total === 0
