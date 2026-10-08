@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { searchListings } from "@/lib/listings/queries"
+import { countActiveListings, searchListings } from "@/lib/listings/queries"
 import { getSearchFacets } from "@/lib/listings/search-index"
 import { slugify, stateCodeFromSlug, stateName } from "@/lib/seo/slug"
 
@@ -15,8 +15,11 @@ export async function generateMetadata(
   if (!code) return { title: "Location not found — TractorAuction.com" }
 
   const name = stateName(code)
+  const live = await countActiveListings({ location_state: code })
 
   return {
+    // Same rule as category pages: no live auctions here, no index entry.
+    robots: live === 0 ? { index: false, follow: true } : undefined,
     title: `Tractor Auctions in ${name} — Farm Equipment for Sale | TractorAuction.com`,
     description: `Find live tractor and farm equipment auctions in ${name}. Compare listings from multiple auction sites, then bid on the auction company's own site.`,
     alternates: { canonical: `/location/${slugify(name ?? code)}` },

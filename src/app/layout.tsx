@@ -7,6 +7,7 @@ import { CompareBar } from "@/components/listing/compare-bar";
 import { CompareProvider } from "@/components/listing/compare-context";
 
 import "./globals.css";
+import { SITE_URL } from "@/lib/seo/slug"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TractorAuction.com — The #1 Source for Tractor Auctions",
+  // Resolves every relative canonical/OG URL in the app to an absolute one;
+  // search engines treat a relative canonical as unreliable.
+  metadataBase: new URL(SITE_URL),
+  title: "TractorAuction.com — Search Tractor Auctions in One Place",
   description:
     "Search and compare tractor and ag equipment auctions from multiple auction sites in one place.",
 };

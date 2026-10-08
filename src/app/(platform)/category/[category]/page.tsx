@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { landingFacts, LandingPage } from "@/components/listing/landing-page"
-import { searchListings } from "@/lib/listings/queries"
+import { countActiveListings, searchListings } from "@/lib/listings/queries"
 import { getSearchFacets } from "@/lib/listings/search-index"
 import { EQUIPMENT_CATEGORIES, findCategory, slugify } from "@/lib/seo/slug"
 
@@ -14,7 +14,12 @@ export async function generateMetadata(
 
   if (!category) return { title: "Category not found — TractorAuction.com" }
 
+  const live = await countActiveListings({ equipment_category: category.value })
+
   return {
+    // An empty landing page is thin content; it rejoins the index on its own
+    // as soon as a listing in this category goes live.
+    robots: live === 0 ? { index: false, follow: true } : undefined,
     title: `${category.label} at Auction — Used Farm Equipment | TractorAuction.com`,
     description: `Search live ${category.label.toLowerCase()} auctions from multiple agricultural auction sites, with hours, horsepower and current bids in one place.`,
     alternates: { canonical: `/category/${category.slug}` },

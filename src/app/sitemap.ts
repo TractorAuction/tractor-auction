@@ -26,11 +26,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.5,
     },
-    ...EQUIPMENT_CATEGORIES.map((category) => ({
-      url: `${SITE_URL}/category/${category.slug}`,
+    ...["/brands", "/results", "/about", "/resources"].map((path) => ({
+      url: `${SITE_URL}${path}`,
       lastModified: now,
-      changeFrequency: "daily" as const,
-      priority: 0.7,
+      changeFrequency: "weekly" as const,
+      priority: 0.5,
     })),
   ]
 
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     const { data, error } = await supabase
       .from("listings")
-      .select("id, make, model, location_state, updated_at, created_at")
+      .select("id, make, model, location_state, equipment_category, updated_at, created_at")
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(MAX_LISTINGS)
@@ -49,6 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const makes = new Set<string>()
     const modelPairs = new Set<string>()
     const states = new Set<string>()
+    // Only categories with live inventory: an empty category page is noindex.
+    const categories = new Set<string>()
     const listingRoutes: MetadataRoute.Sitemap = []
 
     for (const row of data ?? []) {
@@ -60,6 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (make) makes.add(make)
       if (make && model) modelPairs.add(`${slugify(make)}/${slugify(model)}`)
       if (state) states.add(state)
+      if (record.equipment_category) categories.add(record.equipment_category as string)
 
       listingRoutes.push({
         url: `${SITE_URL}/listing/${record.id as string}`,
@@ -71,6 +74,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
       ...staticRoutes,
+      ...EQUIPMENT_CATEGORIES.filter((category) => categories.has(category.value)).map(
+        (category) => ({
+          url: `${SITE_URL}/category/${category.slug}`,
+          lastModified: now,
+          changeFrequency: "daily" as const,
+          priority: 0.7,
+        })
+      ),
       ...Array.from(makes).map((make) => ({
         url: `${SITE_URL}/brand/${slugify(make)}`,
         lastModified: now,

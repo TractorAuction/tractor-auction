@@ -337,6 +337,13 @@ export async function getEndingSoon(limit = 4): Promise<Listing[]> {
   return listings
 }
 
+/** How many live listings a landing page would show. An empty category or
+ *  state page is kept out of search engines until it has inventory. */
+export async function countActiveListings(filters: SearchFilters): Promise<number> {
+  const { total } = await searchListings(filters, 1, 1)
+  return total
+}
+
 /** The homepage inventory figure. Same definition of "active" as search. */
 export async function getActiveListingCount(): Promise<number> {
   const supabase = await createClient()
