@@ -54,6 +54,7 @@ NEXT_PUBLIC_MEILISEARCH_SEARCH_KEY=         # Default Search API Key — search-
 ANTHROPIC_API_KEY=                # AI email drafting
 RESEND_API_KEY=                   # sending
 OUTREACH_FROM_EMAIL=partnerships@tractorauction.com
+OUTREACH_REPLY_TO=                # inbox replies go to; required until the domain has MX records
 
 # Ingestion — any long random string; `openssl rand -hex 32`
 CRON_SECRET=
@@ -388,6 +389,7 @@ without a DB write.
 | `CLAUDE.md` | Full specification, schema, and the 21-day plan |
 | `NEXT_STEPS.md` | Current status, what's blocked, priority order |
 | `OUTREACH_SOURCES.md` | Prospect list, tiers, and outreach messaging rules |
+| `docs/OUTREACH_GUIDE.md` | How to run the outreach agent (written for the site owner) |
 
 ---
 

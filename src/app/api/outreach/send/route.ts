@@ -82,6 +82,10 @@ export async function POST(request: NextRequest) {
   const { data, error } = await resend.emails.send({
     from,
     to: body.to,
+    // tractorauction.com has no mailbox (no MX records), so a reply to the
+    // From address bounces. OUTREACH_REPLY_TO points replies at an inbox
+    // someone actually reads until the domain has one.
+    replyTo: process.env.OUTREACH_REPLY_TO || undefined,
     subject: body.subject,
     text: body.body,
   })
