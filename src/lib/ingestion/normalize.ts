@@ -304,7 +304,16 @@ export function inferFromTitle(title: string | undefined): {
     }
   }
 
-  return { year: yearMatch?.[1], make, model }
+  // "Lot 12: 2016 Kubota M7-171" — a year that is not first still counts when
+  // it sits before the make. After the make it is usually a model number
+  // ("John Deere 2020"), so it is never taken from there.
+  let year = yearMatch?.[1]
+  if (!year && make) {
+    const beforeMake = rest.slice(0, rest.length - afterMake.length)
+    year = beforeMake.match(/\b((?:19|20)\d{2})\b/)?.[1]
+  }
+
+  return { year, make, model }
 }
 
 /**

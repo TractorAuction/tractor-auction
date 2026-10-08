@@ -3,6 +3,7 @@ import { Badge, DataTable } from "@/components/admin/data-table"
 import { Button } from "@/components/ui/button"
 import { getAdminSources } from "@/lib/admin/queries"
 import { formatDateTime } from "@/lib/format"
+import type { AuctionSource } from "@/types"
 
 const INTEGRATION_TYPES = [
   "api",
@@ -23,6 +24,109 @@ const statusTones = {
 
 const fieldClass =
   "h-9 w-full rounded-lg border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+
+const syncTones = {
+  success: "success",
+  partial: "warning",
+  failed: "danger",
+  running: "neutral",
+} as const
+
+/** Add and edit share one form; with a source it edits that row in place. */
+function SourceForm({ source }: { source?: AuctionSource }) {
+  return (
+    <form action={upsertSource} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {source && <input type="hidden" name="id" value={source.id} />}
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Name</span>
+        <input name="name" required defaultValue={source?.name} className={fieldClass} />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Website URL</span>
+        <input
+          name="website_url"
+          type="url"
+          required
+          defaultValue={source?.website_url}
+          placeholder="https://"
+          className={fieldClass}
+        />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Logo URL</span>
+        <input name="logo_url" defaultValue={source?.logo_url} className={fieldClass} />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Geographic coverage</span>
+        <input
+          name="geographic_coverage"
+          defaultValue={source?.geographic_coverage}
+          className={fieldClass}
+        />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Integration type</span>
+        <select
+          name="integration_type"
+          defaultValue={source?.integration_type ?? "manual"}
+          className={fieldClass}
+        >
+          {INTEGRATION_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Feed / API endpoint</span>
+        <input name="api_endpoint" defaultValue={source?.api_endpoint} className={fieldClass} />
+      </label>
+      <label className="flex flex-col gap-1.5 sm:col-span-2">
+        <span className="text-xs font-medium text-muted-foreground">Description</span>
+        <textarea
+          name="description"
+          rows={2}
+          defaultValue={source?.description}
+          className={`${fieldClass} h-auto py-2`}
+        />
+      </label>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted-foreground">Status</span>
+        <select name="status" defaultValue={source?.status ?? "pending"} className={fieldClass}>
+          <option value="pending">pending</option>
+          <option value="active">active</option>
+          <option value="inactive">inactive</option>
+        </select>
+      </label>
+      <div className="flex items-end gap-4">
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="is_featured"
+            defaultChecked={source?.is_featured}
+            className="size-4"
+          />{" "}
+          Featured
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="is_sponsored"
+            defaultChecked={source?.is_sponsored}
+            className="size-4"
+          />{" "}
+          Sponsored
+        </label>
+      </div>
+      <div className="sm:col-span-2">
+        <Button type="submit" size="lg">
+          Save source
+        </Button>
+      </div>
+    </form>
+  )
+}
 
 export default async function AdminSourcesPage() {
   const sources = await getAdminSources()
@@ -82,11 +186,26 @@ export default async function AdminSourcesPage() {
           },
           {
             key: "synced",
-            header: "Last synced",
+            header: "Feed status",
             cell: (row) => (
-              <span className="whitespace-nowrap text-xs text-muted-foreground">
-                {formatDateTime(row.last_synced_at) ?? "Never"}
-              </span>
+              <div className="flex max-w-56 flex-col gap-1 text-xs">
+                <span className="whitespace-nowrap text-muted-foreground">
+                  {formatDateTime(row.last_synced_at) ?? "Never synced"}
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {row.last_sync_status && (
+                    <Badge tone={syncTones[row.last_sync_status]}>{row.last_sync_status}</Badge>
+                  )}
+                  <Badge tone={row.sync_enabled ? "success" : "neutral"}>
+                    {row.sync_enabled ? "auto-sync on" : "auto-sync off"}
+                  </Badge>
+                </div>
+                {row.last_sync_error && (
+                  <span className="text-muted-foreground" title={row.last_sync_error}>
+                    {row.last_sync_error}
+                  </span>
+                )}
+              </div>
             ),
           },
           {
@@ -104,6 +223,7 @@ export default async function AdminSourcesPage() {
             header: "",
             align: "right",
             cell: (row) => (
+              <div className="flex flex-col items-end gap-1.5">
               <form action={setSourceStatus}>
                 <input type="hidden" name="id" value={row.id} />
                 <input
@@ -115,6 +235,15 @@ export default async function AdminSourcesPage() {
                   {row.status === "active" ? "Deactivate" : "Activate"}
                 </Button>
               </form>
+                <details className="text-left">
+                  <summary className="cursor-pointer text-right text-xs text-primary hover:underline">
+                    Edit
+                  </summary>
+                  <div className="mt-2 w-[min(36rem,80vw)] rounded-lg border border-border bg-background p-3">
+                    <SourceForm source={row} />
+                  </div>
+                </details>
+              </div>
             ),
           },
         ]}
@@ -122,63 +251,7 @@ export default async function AdminSourcesPage() {
 
       <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
         <h2 className="text-lg font-semibold text-foreground">Add a source</h2>
-        <form action={upsertSource} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Name</span>
-            <input name="name" required className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Website URL</span>
-            <input name="website_url" type="url" required placeholder="https://" className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Logo URL</span>
-            <input name="logo_url" className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Geographic coverage</span>
-            <input name="geographic_coverage" className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Integration type</span>
-            <select name="integration_type" defaultValue="manual" className={fieldClass}>
-              {INTEGRATION_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Feed / API endpoint</span>
-            <input name="api_endpoint" className={fieldClass} />
-          </label>
-          <label className="flex flex-col gap-1.5 sm:col-span-2">
-            <span className="text-xs font-medium text-muted-foreground">Description</span>
-            <textarea name="description" rows={2} className={`${fieldClass} h-auto py-2`} />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-muted-foreground">Status</span>
-            <select name="status" defaultValue="pending" className={fieldClass}>
-              <option value="pending">pending</option>
-              <option value="active">active</option>
-              <option value="inactive">inactive</option>
-            </select>
-          </label>
-          <div className="flex items-end gap-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="is_featured" className="size-4" /> Featured
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" name="is_sponsored" className="size-4" /> Sponsored
-            </label>
-          </div>
-          <div className="sm:col-span-2">
-            <Button type="submit" size="lg">
-              Save source
-            </Button>
-          </div>
-        </form>
+        <SourceForm />
       </section>
     </>
   )

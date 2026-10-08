@@ -135,6 +135,9 @@ export function mapSource(row: Row): AuctionSource {
     is_featured: Boolean(row.is_featured),
     is_sponsored: Boolean(row.is_sponsored),
     last_synced_at: optional<string>(row.last_synced_at),
+    sync_enabled: Boolean(row.sync_enabled),
+    last_sync_status: optional<AuctionSource["last_sync_status"]>(row.last_sync_status),
+    last_sync_error: optional<string>(row.last_sync_error),
     created_at: row.created_at as string,
   }
 }

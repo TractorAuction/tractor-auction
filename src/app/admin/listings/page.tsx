@@ -1,10 +1,16 @@
 import Link from "next/link"
 
-import { setListingImages, setListingStatus, toggleListingFlag } from "@/app/admin/actions"
+import {
+  createManualListing,
+  setListingImages,
+  setListingStatus,
+  toggleListingFlag,
+} from "@/app/admin/actions"
 import { Badge, DataTable } from "@/components/admin/data-table"
 import { Button } from "@/components/ui/button"
 import { ADMIN_PAGE_SIZE, getAdminListings, getAdminSources } from "@/lib/admin/queries"
 import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
+import { EQUIPMENT_CATEGORIES, US_STATES } from "@/lib/seo/slug"
 import type { Listing } from "@/types"
 
 const statusTones = {
@@ -45,6 +51,9 @@ export default async function AdminListingsPage(props: PageProps<"/admin/listing
     const query = next.toString()
     return query ? `/admin/listings?${query}` : "/admin/listings"
   }
+
+  const added = value(params, "added")
+  const addError = value(params, "add_error")
 
   const fieldClass =
     "h-9 rounded-lg border border-border bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
@@ -234,6 +243,109 @@ export default async function AdminListingsPage(props: PageProps<"/admin/listing
           )}
         </div>
       )}
+
+      <section id="add-listing" className="flex flex-col gap-3 rounded-lg border border-border p-4">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Add a listing</h2>
+          <p className="text-sm text-muted-foreground">
+            For an auction no feed covers. It goes live in search immediately.
+          </p>
+        </div>
+        {added && (
+          <p role="status" className="text-sm text-foreground">
+            Listing added.{" "}
+            <Link href={`/listing/${added}`} className="font-medium text-primary hover:underline">
+              View it
+            </Link>
+          </p>
+        )}
+        {addError && (
+          <p role="alert" className="text-sm text-destructive">
+            A source, a title and a valid link to the auction are required.
+          </p>
+        )}
+        <form action={createManualListing} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Source *</span>
+            <select name="source_id" required defaultValue="" className={fieldClass}>
+              <option value="" disabled>
+                Select a source
+              </option>
+              {sources.map((source) => (
+                <option key={source.id} value={source.id}>
+                  {source.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-2">
+            <span className="text-xs font-medium text-muted-foreground">Title *</span>
+            <input name="title" required maxLength={200} placeholder="2015 John Deere 6145R" className={fieldClass} />
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-3">
+            <span className="text-xs font-medium text-muted-foreground">
+              Link to the auction lot *
+            </span>
+            <input name="original_url" type="url" required placeholder="https://" className={fieldClass} />
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Category</span>
+            <select name="equipment_category" defaultValue="" className={fieldClass}>
+              <option value="">Detect from title</option>
+              {EQUIPMENT_CATEGORIES.map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          {[
+            ["make", "Make", "text"],
+            ["model", "Model", "text"],
+            ["year", "Year", "number"],
+            ["hours", "Hours", "number"],
+            ["horsepower", "Horsepower", "number"],
+            ["current_bid", "Current bid (USD)", "number"],
+            ["location_city", "City", "text"],
+            ["location_zip", "ZIP", "text"],
+          ].map(([name, label, type]) => (
+            <label key={name} className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-muted-foreground">{label}</span>
+              <input name={name} type={type} className={fieldClass} />
+            </label>
+          ))}
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">State</span>
+            <select name="location_state" defaultValue="" className={fieldClass}>
+              <option value="">Select</option>
+              {Object.entries(US_STATES).map(([code, name]) => (
+                <option key={code} value={code}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-xs font-medium text-muted-foreground">Auction ends</span>
+            <input name="auction_end_date" type="datetime-local" className={fieldClass} />
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-3">
+            <span className="text-xs font-medium text-muted-foreground">
+              Photo URLs (one per line)
+            </span>
+            <textarea name="images" rows={2} className={`${fieldClass} h-auto py-2`} />
+          </label>
+          <label className="flex flex-col gap-1.5 sm:col-span-3">
+            <span className="text-xs font-medium text-muted-foreground">Description</span>
+            <textarea name="description" rows={3} className={`${fieldClass} h-auto py-2`} />
+          </label>
+          <div className="sm:col-span-3">
+            <Button type="submit" size="lg">
+              Add listing
+            </Button>
+          </div>
+        </form>
+      </section>
     </>
   )
 }

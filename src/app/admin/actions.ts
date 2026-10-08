@@ -1,8 +1,19 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 import { requireAdmin } from "@/lib/auth/require-admin"
+import { geocodeZip } from "@/lib/geo/zip"
+import {
+  canonicalCategory,
+  canonicalMake,
+  canonicalState,
+  inferFromTitle,
+  parseImages,
+  parseInteger,
+  parseMoney,
+} from "@/lib/ingestion/normalize"
 import { mapListing } from "@/lib/listings/queries"
 import { patchListing, syncListings } from "@/lib/meilisearch/sync"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -50,6 +61,92 @@ export async function setListingStatus(formData: FormData) {
   await supabase.from("listings").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
   await syncIndexPatch(id, { status })
   revalidatePath("/admin/listings")
+}
+
+/**
+ * A listing typed in by an admin, for an auction no feed covers. Goes through
+ * the same normalisation as ingested rows (make spelling, category, ZIP to
+ * coordinates) so it filters, sorts and radius-searches like any other.
+ */
+export async function createManualListing(formData: FormData) {
+  const supabase = await admin()
+  const sourceId = text(formData.get("source_id"))
+  const title = text(formData.get("title"))
+  const originalUrl = text(formData.get("original_url"))
+
+  let validUrl: string | null = null
+  try {
+    validUrl = originalUrl && /^https?:$/.test(new URL(originalUrl).protocol) ? originalUrl : null
+  } catch {
+    validUrl = null
+  }
+  if (!sourceId || !title || !validUrl) {
+    redirect("/admin/listings?add_error=1#add-listing")
+  }
+
+  const inferred = inferFromTitle(title)
+  const description = text(formData.get("description"))
+  const zip = text(formData.get("location_zip"))
+  const point = geocodeZip(zip)
+  const endRaw = text(formData.get("auction_end_date"))
+  const end = endRaw ? new Date(endRaw) : null
+  const endDate = end && !Number.isNaN(end.getTime()) ? end.toISOString() : null
+  const now = new Date().toISOString()
+
+  const { data: listing, error } = await supabase
+    .from("listings")
+    .insert({
+      source_id: sourceId,
+      external_id: `manual-${crypto.randomUUID()}`,
+      title,
+      equipment_category: canonicalCategory(
+        text(formData.get("equipment_category")) ?? undefined,
+        title,
+        description ?? undefined
+      ),
+      make: canonicalMake(text(formData.get("make")) ?? undefined) ?? inferred.make ?? null,
+      model: text(formData.get("model")) ?? inferred.model ?? null,
+      year:
+        parseInteger(text(formData.get("year")) ?? inferred.year, {
+          min: 1900,
+          max: new Date().getFullYear() + 2,
+        }) ?? null,
+      hours:
+        parseInteger(text(formData.get("hours")) ?? undefined, { min: 0, max: 100_000 }) ?? null,
+      horsepower:
+        parseInteger(text(formData.get("horsepower")) ?? undefined, { min: 1, max: 2000 }) ??
+        null,
+      location_city: text(formData.get("location_city")),
+      location_state: canonicalState(text(formData.get("location_state")) ?? undefined) ?? null,
+      location_zip: zip,
+      location_lat: point?.lat ?? null,
+      location_lng: point?.lng ?? null,
+      auction_end_date: endDate,
+      current_bid: parseMoney(text(formData.get("current_bid")) ?? undefined) ?? null,
+      description,
+      images: parseImages(text(formData.get("images")) ?? undefined),
+      original_url: validUrl,
+      status: endDate && new Date(endDate).getTime() < Date.now() ? "expired" : "active",
+      last_synced_at: now,
+      updated_at: now,
+    })
+    .select("*, source:auction_sources(*)")
+    .single()
+
+  if (error || !listing) {
+    console.error("[admin] createManualListing:", error?.message)
+    redirect("/admin/listings?add_error=1#add-listing")
+  }
+
+  try {
+    await syncListings([mapListing(listing as Record<string, unknown>)])
+  } catch (indexError) {
+    console.error("[admin] search index sync failed for manual listing:", indexError)
+  }
+
+  revalidatePath("/admin/listings")
+  revalidatePath("/search")
+  redirect(`/admin/listings?added=${listing.id}`)
 }
 
 export async function toggleListingFlag(formData: FormData) {
