@@ -43,7 +43,15 @@ export const gsaAuctionsConnector: Connector = {
       )
     }
 
-    const body = await fetchFeed(url, { headers: { [config.authHeaderName ?? "X-API-KEY"]: apiKey } })
+    // The endpoint returns all ~1,400 federal lots (about 4 MB) in one response
+    // and regularly takes close to 20s, the shared default timeout. One longer
+    // attempt fits inside the cron's 60s ceiling; three retries of it would not,
+    // and a miss is simply retried on the next tick.
+    const body = await fetchFeed(url, {
+      headers: { [config.authHeaderName ?? "X-API-KEY"]: apiKey },
+      timeoutMs: 40_000,
+      attempts: 1,
+    })
 
     let parsed: unknown
     try {
@@ -88,8 +96,12 @@ export const gsaAuctionsConnector: Connector = {
         // (it's stored as free text), so this is cleaned up here instead.
         location_zip: str(lot.propertyZip)?.replace(/null$/, "") || undefined,
         auction_company: "GSA Auctions",
-        auction_end_date: str(lot.aucEndDt),
-        current_bid: str(lot.highBidAmount),
+        auction_end_date: endOfDayCentral(str(lot.aucEndDt)),
+        // highBidAmount is a JSON number (or null before the first bid), not a
+        // string; reading it through str() silently dropped every bid.
+        current_bid: numberText(lot.highBidAmount),
+        hours: extractHours(description),
+        horsepower: extractHorsepower(description),
         // lot.imageURL is NOT a usable public image: it 401s with "Token
         // expired or invalid, please login again" even when authenticated
         // with the same api.data.gov key that successfully reads /auctions.
@@ -144,6 +156,62 @@ function isAgEquipment(text: string): boolean {
   // which once let a printer lot through as farm equipment.
   const cleaned = text.replace(LOGISTICS_NOISE, " ")
   return EQUIPMENT_PHRASES.test(cleaned) || AG_MAKES.test(cleaned)
+}
+
+/**
+ * aucEndDt is a bare date ("2026-10-15") with no closing time anywhere in the
+ * response. Read as-is it becomes midnight UTC, which is the previous evening
+ * in the US, so the listing was hidden as ended while bidding was still open.
+ * End of that day in US Central time is the earliest moment the lot is
+ * certainly closed (GSA lots also extend on late bids), so it errs toward
+ * showing a lot slightly too long rather than hiding a live one.
+ */
+export function endOfDayCentral(date: string | undefined): string | undefined {
+  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return date
+  // 23:59:59 at UTC-6 (CST); if Chicago is on daylight time that day, UTC-5.
+  const cst = new Date(`${date}T23:59:59-06:00`)
+  const offset = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Chicago",
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(cst)
+    .find((part) => part.type === "timeZoneName")?.value
+  return offset === "GMT-5" ? new Date(`${date}T23:59:59-05:00`).toISOString() : cst.toISOString()
+}
+
+/**
+ * GSA has no hours or horsepower fields, but most equipment descriptions
+ * state them in a few consistent shapes ("Hours: 2,321", "Hour meter reads:
+ * 1,215", "3,121 total operating hours"). Phrases like "24 hours in advance"
+ * in pickup instructions deliberately do not match.
+ */
+const HOURS_PATTERNS = [
+  /\bhours?(?:\s+meter\s+reads?)?\s*[:=]\s*([\d,]+)/i,
+  /\b([\d,]{2,})\+?\s+(?:total\s+)?operating\s+hours\b/i,
+  /\bshowing\s+([\d,]{2,})\+?\s+hours\b/i,
+  /\b([\d,]{2,})\+?\s+hours\s+(?:of\s+operation|on\s+the\s+(?:dash|meter|clock))\b/i,
+]
+
+const HORSEPOWER_PATTERNS = [
+  /\bhorsepower\s*[:=]\s*(\d{2,4})/i,
+  /\b(\d{2,4})\s+(?:gross\s+|net\s+|engine\s+)?(?:hp|horsepower)\b/i,
+]
+
+function firstMatch(patterns: RegExp[], text: string | undefined): string | undefined {
+  if (!text) return undefined
+  for (const pattern of patterns) {
+    const match = pattern.exec(text)
+    if (match) return match[1].replace(/,/g, "")
+  }
+  return undefined
+}
+
+export const extractHours = (text: string | undefined) => firstMatch(HOURS_PATTERNS, text)
+export const extractHorsepower = (text: string | undefined) => firstMatch(HORSEPOWER_PATTERNS, text)
+
+function numberText(value: unknown): string | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value)
+  return str(value)
 }
 
 function str(value: unknown): string | undefined {
