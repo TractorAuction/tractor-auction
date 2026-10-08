@@ -32,6 +32,20 @@ const cases = [
   ["combined: make+state+hours", { make: "John Deere", state, hours_max: 2000 }, l => l.make === "John Deere" && l.location_state === state && num(l.hours) !== null && l.hours <= 2000],
   ["combined: tractor+make+price", { category: "tractor", make: "John Deere", price_max: mid }, l => l.equipment_category === "tractor" && l.make === "John Deere" && num(l.current_bid) !== null && l.current_bid <= mid],
 ]
+// Radius: origin is a listing's own coordinates (its ZIP), checked with the
+// same haversine the app uses. Listings within 1 mi of the edge are skipped
+// in the comparison, since rounding can legitimately land them either side.
+const R = 3958.8, rad = Math.PI / 180
+const dist = (a, b) => 2 * R * Math.asin(Math.sqrt(Math.sin((b.lat - a.lat) * rad / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin((b.lng - a.lng) * rad / 2) ** 2))
+const geoListing = live.find(l => l.location_lat !== null && l.location_zip)
+const { default: zipData } = await import("../src/lib/geo/us-zip-centroids.json", { with: { type: "json" } })
+const zipRow = zipData.zips.split("\n").find(r => r.startsWith(geoListing.location_zip + ","))
+const origin = zipRow ? { lat: Number(zipRow.split(",")[1]), lng: Number(zipRow.split(",")[2]) } : { lat: Number(geoListing.location_lat), lng: Number(geoListing.location_lng) }
+for (const miles of [50, 100, 250, 500]) {
+  cases.push([`radius ${miles} mi of ${geoListing.location_zip}`, { zip: geoListing.location_zip, radius: String(miles) }, l => l.location_lat !== null && dist(origin, { lat: Number(l.location_lat), lng: Number(l.location_lng) }) <= miles])
+}
+cases.push([`zip nationwide (no radius)`, { zip: geoListing.location_zip }, () => true])
+
 let fails = 0
 const get = async (p) => { const r = await fetch(BASE + "/api/search?" + new URLSearchParams({ pageSize: "100", ...p })); return (await r.json()).data }
 for (const [name, params, pred] of cases) {
@@ -41,6 +55,14 @@ for (const [name, params, pred] of cases) {
   const ok = bad.length === 0 && d.total === expected.length && d.listings.length === expected.length
   if (!ok) fails++
   console.log(`${ok ? "PASS" : "FAIL"}  ${name.padEnd(30)} api=${d.total} rows=${d.listings.length} expected=${expected.length}${bad.length ? " wrong=" + bad.map(b => b.title).join("; ") : ""}`)
+}
+// nearest first
+{
+  const d = await get({ zip: geoListing.location_zip, sort: "distance" })
+  const ds = d.listings.filter(l => l.location_lat !== undefined).map(l => dist(origin, { lat: l.location_lat, lng: l.location_lng }))
+  const ok = ds.every((v, i) => i === 0 || ds[i - 1] <= v + 0.5)
+  if (!ok) fails++
+  console.log(`${ok ? "PASS" : "FAIL"}  sort distance (nearest first)  first=${ds[0]?.toFixed(1)}mi last=${ds.at(-1)?.toFixed(1)}mi`)
 }
 // sorting
 const key = { ending_soon: l => l.auction_end_date && new Date(l.auction_end_date).getTime(), recently_added: l => new Date(l.created_at).getTime(), price_asc: l => num(l.current_bid), price_desc: l => num(l.current_bid) }

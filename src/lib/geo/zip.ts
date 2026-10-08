@@ -9,25 +9,41 @@ const MILES_TO_METERS = 1609.344
 const EARTH_RADIUS_MILES = 3958.8
 
 let table: Map<string, LatLng> | null = null
+let prefixTable: Map<string, LatLng> | null = null
 
 /**
  * ZIP → centroid from the bundled Census ZCTA file (public domain, ~33k ZIPs),
  * so neither ingestion nor a visitor's search depends on a paid or rate-limited
  * geocoding API. Parsed once per server instance, on first use.
+ *
+ * PO-box and single-organization ZIPs (a post office, a military base) have no
+ * ZCTA. Those fall back to the mean of every ZCTA sharing their first three
+ * digits — the same sectional center — which places them within the right
+ * local area, close enough for a 50+ mile radius.
  */
-function zipTable(): Map<string, LatLng> {
-  if (table) return table
+function zipTables() {
+  if (table && prefixTable) return { table, prefixTable }
   table = new Map()
+  const sums = new Map<string, { lat: number; lng: number; count: number }>()
   for (const line of centroids.zips.split("\n")) {
     const [zip, lat, lng] = line.split(",")
-    table.set(zip, { lat: Number(lat), lng: Number(lng) })
+    const point = { lat: Number(lat), lng: Number(lng) }
+    table.set(zip, point)
+    const prefix = zip.slice(0, 3)
+    const sum = sums.get(prefix) ?? { lat: 0, lng: 0, count: 0 }
+    sums.set(prefix, { lat: sum.lat + point.lat, lng: sum.lng + point.lng, count: sum.count + 1 })
   }
-  return table
+  prefixTable = new Map(
+    [...sums].map(([prefix, sum]) => [prefix, { lat: sum.lat / sum.count, lng: sum.lng / sum.count }])
+  )
+  return { table, prefixTable }
 }
 
 export function geocodeZip(value: string | undefined | null): LatLng | undefined {
   const zip = normalizeZip(value)
-  return zip ? zipTable().get(zip) : undefined
+  if (!zip) return undefined
+  const tables = zipTables()
+  return tables.table.get(zip) ?? tables.prefixTable.get(zip.slice(0, 3))
 }
 
 export function milesToMeters(miles: number): number {
