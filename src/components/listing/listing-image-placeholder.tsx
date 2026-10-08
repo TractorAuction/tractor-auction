@@ -1,4 +1,4 @@
-import { Tractor } from "lucide-react"
+import { Tractor, Truck } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -8,12 +8,16 @@ import { cn } from "@/lib/utils"
  * misrepresent the one being bid on.
  */
 export function ListingImagePlaceholder({
+  category,
   className,
   iconClassName,
 }: {
+  /** Picks the silhouette, so a truck listing does not show a tractor. */
+  category?: string
   className?: string
   iconClassName?: string
 }) {
+  const Icon = category === "truck-trailer" ? Truck : Tractor
   return (
     <div
       role="img"
@@ -23,7 +27,7 @@ export function ListingImagePlaceholder({
         className
       )}
     >
-      <Tractor className={cn("size-12", iconClassName)} strokeWidth={1} />
+      <Icon className={cn("size-12", iconClassName)} strokeWidth={1} />
     </div>
   )
 }

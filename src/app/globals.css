@@ -135,4 +135,15 @@
   html {
     @apply font-sans;
   }
+  /* Touch screens: every form control is at least a 44px tap target, and at
+     least 16px text, below which iOS Safari zooms the page on focus. Covers
+     the many per-page field classes in one place. */
+  @media (pointer: coarse) {
+    input:not([type="checkbox"], [type="radio"], [type="hidden"], [type="range"]),
+    select,
+    textarea {
+      min-height: 2.75rem;
+      font-size: 1rem;
+    }
+  }
 }

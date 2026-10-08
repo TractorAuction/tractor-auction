@@ -45,7 +45,7 @@ export function Pagination({
   }
 
   const linkClass =
-    "flex h-9 min-w-9 items-center justify-center rounded-lg border border-border px-2 text-sm transition-colors hover:bg-muted"
+    "flex h-9 min-w-9 pointer-coarse:h-11 pointer-coarse:min-w-11 items-center justify-center rounded-lg border border-border px-2 text-sm transition-colors hover:bg-muted"
 
   return (
     <nav aria-label="Search results pages" className="flex items-center justify-center gap-1.5">

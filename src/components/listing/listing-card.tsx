@@ -57,7 +57,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
             className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <ListingImagePlaceholder />
+          <ListingImagePlaceholder category={listing.equipment_category} />
         )}
 
         {listing.images.length > 1 && (

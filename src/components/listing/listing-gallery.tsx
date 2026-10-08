@@ -10,10 +10,11 @@ import { cn } from "@/lib/utils"
 
 type ListingGalleryProps = {
   images: string[]
+  category?: string
   title: string
 }
 
-export function ListingGallery({ images, title }: ListingGalleryProps) {
+export function ListingGallery({ images, title, category }: ListingGalleryProps) {
   const [active, setActive] = useState(0)
 
   const step = (delta: number) => {
@@ -25,7 +26,7 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
   if (images.length === 0) {
     return (
       <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border">
-        <ListingImagePlaceholder iconClassName="size-24" />
+        <ListingImagePlaceholder category={category} iconClassName="size-24" />
         <p className="absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
           Photos are on the auction company&apos;s listing.
         </p>

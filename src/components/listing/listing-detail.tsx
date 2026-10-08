@@ -118,7 +118,7 @@ export function ListingDetail({
             </div>
           </header>
 
-          <ListingGallery images={listing.images} title={title} />
+          <ListingGallery images={listing.images} title={title} category={listing.equipment_category} />
 
           <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {quickSpecs.map((spec) => (

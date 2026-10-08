@@ -47,8 +47,13 @@ export function HeroSearch({
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        <select name={FILTER_PARAMS.make} defaultValue="" className={selectClass}>
+      {/* Two even columns on phones; a single wrapping row from sm up. */}
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <select
+          name={FILTER_PARAMS.make}
+          defaultValue=""
+          className={`${selectClass} col-span-2 sm:col-span-1`}
+        >
           <option value="">All Makes</option>
           {makes.map((make) => (
             <option key={make} value={make}>
@@ -60,19 +65,19 @@ export function HeroSearch({
           type="text"
           name={FILTER_PARAMS.model}
           placeholder="Model"
-          className={`${selectClass} w-32`}
+          className={`${selectClass} w-full sm:w-32`}
         />
         <input
           type="number"
           name={FILTER_PARAMS.year_min}
           placeholder="Year Min"
-          className={`${selectClass} w-24`}
+          className={`${selectClass} w-full sm:w-24`}
         />
         <input
           type="number"
           name={FILTER_PARAMS.year_max}
           placeholder="Year Max"
-          className={`${selectClass} w-24`}
+          className={`${selectClass} w-full sm:w-24`}
         />
         <input
           type="text"
@@ -84,7 +89,7 @@ export function HeroSearch({
           placeholder="Your ZIP"
           title="5-digit US ZIP code"
           aria-label="Your ZIP code"
-          className={`${selectClass} w-24`}
+          className={`${selectClass} w-full sm:w-24`}
         />
         <select
           name={FILTER_PARAMS.radius_miles}
@@ -111,7 +116,7 @@ export function HeroSearch({
         <Button
           type="submit"
           variant="secondary"
-          className="h-10 gap-1.5 bg-foreground text-background hover:bg-foreground/85"
+          className="col-span-2 h-10 gap-1.5 bg-foreground text-background hover:bg-foreground/85 sm:col-span-1"
         >
           <SlidersHorizontal className="size-3.5" />
           More Filters

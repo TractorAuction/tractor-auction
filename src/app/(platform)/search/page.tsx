@@ -1,4 +1,3 @@
-import { SlidersHorizontal } from "lucide-react"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -6,6 +5,7 @@ import { SaveSearchButton } from "@/components/account/save-search-button"
 import { ImpressionTracker } from "@/components/listing/impression-tracker"
 import { ListingCard } from "@/components/listing/listing-card"
 import { ListingGrid } from "@/components/listing/listing-grid"
+import { FilterDisclosure } from "@/components/search/filter-disclosure"
 import { Filters } from "@/components/search/filters"
 import { Pagination } from "@/components/search/pagination"
 import { SortSelect } from "@/components/search/sort-select"
@@ -84,6 +84,11 @@ export default async function SearchPage(props: PageProps<"/search">) {
 
   const sort = filters.sort_by ?? "ending_soon"
   const filtered = hasActiveFilters(filters)
+  // The free-text query has its own box and sort is not a filter, so neither
+  // counts toward the badge on the mobile Filters button.
+  const activeFilterCount = Object.entries(filters).filter(
+    ([key, value]) => key !== "sort_by" && key !== "query" && value !== undefined && value !== ""
+  ).length
   const firstResult = total === 0 ? 0 : (page - 1) * pageSize + 1
   const lastResult = Math.min(page * pageSize, total)
 
@@ -120,16 +125,11 @@ export default async function SearchPage(props: PageProps<"/search">) {
 
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside className="flex flex-col gap-4 lg:sticky lg:top-6 lg:w-64 lg:shrink-0">
-          <details open className="rounded-lg border border-border p-4 lg:border-0 lg:p-0 [&>summary]:lg:hidden">
-            <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium">
-              <SlidersHorizontal className="size-4" /> Filters
-            </summary>
-            <div className="mt-4 lg:mt-0">
-              <Suspense fallback={null}>
-                <Filters facets={facets} />
-              </Suspense>
-            </div>
-          </details>
+          <FilterDisclosure activeCount={activeFilterCount}>
+            <Suspense fallback={null}>
+              <Filters facets={facets} />
+            </Suspense>
+          </FilterDisclosure>
 
           {featuredSource && (
             <div className="flex flex-col gap-2 rounded-lg border border-border p-3">

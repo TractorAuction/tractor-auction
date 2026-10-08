@@ -88,7 +88,7 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
                       {cover ? (
                         <Image src={cover} alt={title} fill sizes="200px" className="object-cover" />
                       ) : (
-                        <ListingImagePlaceholder iconClassName="size-8" />
+                        <ListingImagePlaceholder category={listing.equipment_category} iconClassName="size-8" />
                       )}
                       <button
                         type="button"

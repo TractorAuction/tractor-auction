@@ -35,7 +35,7 @@ export function CompareToggle({ item, className }: { item: CompareItem; classNam
         }
       }}
       className={cn(
-        "relative flex size-7 items-center justify-center rounded-md border backdrop-blur-sm transition-colors",
+        "relative flex size-7 items-center justify-center rounded-md border backdrop-blur-sm transition-colors pointer-coarse:size-11",
         selected
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border/80 bg-background/80 text-muted-foreground hover:text-foreground",
