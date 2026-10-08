@@ -31,9 +31,9 @@ export function Footer() {
               <Image src="/logo.png" alt="TractorAuction.com" width={100} height={100} />
             </Link>
             <p className="max-w-xs text-sm text-white/70">
-              One search for active and recent tractor auctions across every major site.
-              We aggregate listings — bidding always happens on the original auction
-              platform.
+              One search for active and recent tractor auctions from multiple auction
+              sites. TractorAuction.com is a search and aggregation platform. We are not
+              the auctioneer, seller, or bidding platform.
             </p>
           </div>
 

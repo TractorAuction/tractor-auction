@@ -60,3 +60,27 @@ jobs:
             2*) ;;
             *) echo "::error::ingestion returned HTTP $http_code"; exit 1 ;;
           esac
+
+      - name: Verify outbound links
+        if: ${{ !inputs.dry_run }}
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          # Runs after ingestion so freshly synced listings are checked against
+          # their auction pages the same tick. A 404/410 expires the listing.
+          http_code=$(curl --silent --show-error --fail-with-body \
+            --max-time 120 \
+            --retry 2 --retry-delay 30 --retry-all-errors \
+            --write-out '%{http_code}' \
+            --output verify.json \
+            -H "authorization: Bearer $CRON_SECRET" \
+            "${SITE_URL%/}/api/cron/verify-links") || true
+
+          echo "HTTP $http_code"
+          python3 -m json.tool < verify.json || cat verify.json
+
+          case "$http_code" in
+            2*) ;;
+            *) echo "::error::link verification returned HTTP $http_code"; exit 1 ;;
+          esac

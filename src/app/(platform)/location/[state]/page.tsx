@@ -18,7 +18,7 @@ export async function generateMetadata(
 
   return {
     title: `Tractor Auctions in ${name} — Farm Equipment for Sale | TractorAuction.com`,
-    description: `Find live tractor and farm equipment auctions in ${name}. Compare listings from every major auction site, then bid on the auction company's own site.`,
+    description: `Find live tractor and farm equipment auctions in ${name}. Compare listings from multiple auction sites, then bid on the auction company's own site.`,
     alternates: { canonical: `/location/${slugify(name ?? code)}` },
   }
 }

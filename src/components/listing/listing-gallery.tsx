@@ -1,7 +1,9 @@
 "use client"
 
-import { ChevronLeft, ChevronRight, Expand, ImageOff } from "lucide-react"
+import { ChevronLeft, ChevronRight, Expand } from "lucide-react"
 import Image from "next/image"
+
+import { ListingImagePlaceholder } from "./listing-image-placeholder"
 import { useState } from "react"
 
 import { cn } from "@/lib/utils"
@@ -22,12 +24,10 @@ export function ListingGallery({ images, title }: ListingGalleryProps) {
   // no images — an empty gallery should not imply photos exist to be clicked.
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 rounded-xl border border-border bg-muted text-muted-foreground/60">
-        <ImageOff className="size-10" strokeWidth={1.25} />
-        <p className="text-sm font-medium">No photos for this listing</p>
-        <p className="max-w-xs text-center text-xs text-muted-foreground/70">
-          This auction source did not publish images. View the auction to see the
-          seller&apos;s own listing.
+      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border">
+        <ListingImagePlaceholder iconClassName="size-24" />
+        <p className="absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
+          Photos are on the auction company&apos;s listing.
         </p>
       </div>
     )

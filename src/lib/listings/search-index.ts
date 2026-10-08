@@ -24,7 +24,12 @@ function quote(value: string): string {
 }
 
 function buildFilter(filters: SearchFilters): string {
-  const clauses = [`status = "active"`]
+  // Mirrors the Postgres path: a lot whose end date has passed is not live, even
+  // if the expiry sweep has not reached it yet.
+  const clauses = [
+    `status = "active"`,
+    `(auction_end_date IS NULL OR auction_end_date >= ${Date.now()})`,
+  ]
 
   if (filters.equipment_category) clauses.push(`equipment_category = ${quote(filters.equipment_category)}`)
   if (filters.make) clauses.push(`make = ${quote(filters.make)}`)
@@ -73,7 +78,13 @@ export async function searchListingsIndexed(
   }
 
   const supabase = await createClient()
-  const { data, error } = await supabase.from("listings").select(LISTING_SELECT).in("id", ids)
+  // Postgres is the source of truth for status: a listing expired since its
+  // index document was last written is dropped here rather than shown as live.
+  const { data, error } = await supabase
+    .from("listings")
+    .select(LISTING_SELECT)
+    .in("id", ids)
+    .eq("status", "active")
 
   if (error) throw new Error(`Failed to hydrate search results: ${error.message}`)
 

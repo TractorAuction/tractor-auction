@@ -9,7 +9,7 @@ import { EQUIPMENT_CATEGORIES, slugify } from "@/lib/seo/slug"
 export const metadata: Metadata = {
   title: "Tractor Brands at Auction — Browse by Make | TractorAuction.com",
   description:
-    "Browse live tractor auctions by manufacturer. John Deere, Case IH, Kubota, New Holland, Fendt, Massey Ferguson and more, from every major auction site.",
+    "Browse live tractor auctions by manufacturer. John Deere, Case IH, Kubota, New Holland, Fendt, Massey Ferguson and more, from multiple auction sites.",
   alternates: { canonical: "/brands" },
 }
 

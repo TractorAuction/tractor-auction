@@ -16,7 +16,7 @@ export async function generateMetadata(
 
   return {
     title: `${category.label} at Auction — Used Farm Equipment | TractorAuction.com`,
-    description: `Search live ${category.label.toLowerCase()} auctions from every major agricultural auction site, with hours, horsepower and current bids in one place.`,
+    description: `Search live ${category.label.toLowerCase()} auctions from multiple agricultural auction sites, with hours, horsepower and current bids in one place.`,
     alternates: { canonical: `/category/${category.slug}` },
   }
 }

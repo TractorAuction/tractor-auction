@@ -38,3 +38,25 @@ export function formatDateTime(value?: string | null) {
 export function formatLocation(city?: string | null, state?: string | null) {
   return [city, state].filter(Boolean).join(", ") || null
 }
+
+const relative = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" })
+
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 365 * 24 * 60 * 60 * 1000],
+  ["month", 30 * 24 * 60 * 60 * 1000],
+  ["day", 24 * 60 * 60 * 1000],
+  ["hour", 60 * 60 * 1000],
+  ["minute", 60 * 1000],
+]
+
+/** "2 hours ago", "yesterday", "just now". */
+export function formatRelativeTime(value?: string | null, now = Date.now()) {
+  if (!value) return null
+  const ms = new Date(value).getTime()
+  if (!Number.isFinite(ms)) return null
+  const diff = ms - now
+  for (const [unit, size] of RELATIVE_UNITS) {
+    if (Math.abs(diff) >= size) return relative.format(Math.round(diff / size), unit)
+  }
+  return "just now"
+}

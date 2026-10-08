@@ -66,7 +66,7 @@ export default function PartnerLandingPage() {
             Put your auctions in front of more buyers.
           </h1>
           <p className="max-w-2xl text-white/80">
-            TractorAuction.com is where buyers search every major tractor auction at once. We
+            TractorAuction.com is where buyers search tractor auctions from multiple sites at once. We
             send them to you to bid. There is no cost, no commission, and no exclusivity —
             we are a search engine for your listings, not a competitor.
           </p>

@@ -1,6 +1,6 @@
 "use client"
 
-import { ImageOff, X } from "lucide-react"
+import { X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation"
 import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
 import { slugify } from "@/lib/seo/slug"
 import type { Listing } from "@/types"
+
+import { ListingImagePlaceholder } from "./listing-image-placeholder"
 
 /** One row per attribute, each listing's value read off the same field. */
 const ROWS: Array<{ label: string; value: (listing: Listing) => React.ReactNode }> = [
@@ -57,9 +59,7 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
                       {cover ? (
                         <Image src={cover} alt={title} fill sizes="200px" className="object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-muted-foreground/60">
-                          <ImageOff className="size-6" strokeWidth={1.25} />
-                        </div>
+                        <ListingImagePlaceholder iconClassName="size-8" />
                       )}
                       <button
                         type="button"

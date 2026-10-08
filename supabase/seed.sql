@@ -1,4 +1,8 @@
 -- Development seed data for TractorAuction.com
+--
+-- LOCAL DEVELOPMENT ONLY. Never run against production: the listings below are
+-- invented, their original_url values point at pages that do not exist, and
+-- migration 0009 exists to remove them after they once reached the live site.
 -- Four auction sources and 30 listings, enough to exercise search, filters,
 -- sorting, pagination, and the featured/sponsored placements.
 --

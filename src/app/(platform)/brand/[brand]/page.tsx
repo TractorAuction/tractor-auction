@@ -21,7 +21,7 @@ export async function generateMetadata(
 
   return {
     title: `${make} Tractor Auctions — Used ${make} Tractors for Sale | TractorAuction.com`,
-    description: `Browse live ${make} tractor auctions from every major auction site. Compare year, hours, horsepower and current bids, then bid on the original auction site.`,
+    description: `Browse live ${make} tractor auctions from multiple auction sites. Compare year, hours, horsepower and current bids, then bid on the original auction site.`,
     alternates: { canonical: `/brand/${slugify(make)}` },
   }
 }

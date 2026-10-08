@@ -85,13 +85,15 @@ export async function removeListings(ids: string[]): Promise<void> {
 /**
  * Full rebuild from Postgres, batched. This is the recovery path: if the index
  * is ever suspected to have drifted (a failed sync, a changed document shape
- * after a code change), this is idempotent and safe to rerun — every row is
- * fully replaced, not merged.
+ * after a code change, rows deleted straight from the database), this is
+ * idempotent and safe to rerun — every row is fully replaced, not merged, and
+ * any index document whose row no longer exists is removed.
  */
-export async function reindexAll(): Promise<{ indexed: number }> {
+export async function reindexAll(): Promise<{ indexed: number; removed: number }> {
   await ensureIndexConfigured()
 
   const supabase = createAdminClient()
+  const liveIds = new Set<string>()
   let indexed = 0
   let from = 0
 
@@ -105,11 +107,24 @@ export async function reindexAll(): Promise<{ indexed: number }> {
     if (!data || data.length === 0) break
 
     await syncListings(data.map((row) => mapListing(row as Record<string, unknown>)))
+    for (const row of data) liveIds.add(row.id as string)
 
     indexed += data.length
     if (data.length < REINDEX_BATCH) break
     from += REINDEX_BATCH
   }
 
-  return { indexed }
+  const orphans: string[] = []
+  for (let offset = 0; ; offset += REINDEX_BATCH) {
+    const page = await listingsIndex().getDocuments<{ id: string }>({
+      fields: ["id"],
+      offset,
+      limit: REINDEX_BATCH,
+    })
+    for (const doc of page.results) if (!liveIds.has(doc.id)) orphans.push(doc.id)
+    if (page.results.length < REINDEX_BATCH) break
+  }
+  await removeListings(orphans)
+
+  return { indexed, removed: orphans.length }
 }

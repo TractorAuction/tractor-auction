@@ -1,11 +1,11 @@
-import { ImageOff } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 
-import { formatCurrency, formatDate, formatLocation } from "@/lib/format"
+import { formatCurrency, formatDate, formatLocation, formatRelativeTime } from "@/lib/format"
 import type { Listing } from "@/types"
 
 import { CompareToggle } from "./compare-toggle"
+import { ListingImagePlaceholder } from "./listing-image-placeholder"
 
 export function ListingCard({ listing }: { listing: Listing }) {
   const location = formatLocation(listing.location_city, listing.location_state)
@@ -17,6 +17,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const bid = formatCurrency(listing.current_bid)
   const title = listing.title ?? [listing.year, listing.make, listing.model].filter(Boolean).join(" ")
   const cover = listing.images[0]
+  const updated = formatRelativeTime(listing.last_synced_at ?? listing.updated_at)
 
   return (
     <Link
@@ -56,10 +57,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
             className="object-cover transition-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 text-muted-foreground/60">
-            <ImageOff className="size-8" strokeWidth={1.25} />
-            <span className="text-[11px] font-medium">No photo</span>
-          </div>
+          <ListingImagePlaceholder />
         )}
 
         {listing.images.length > 1 && (
@@ -79,8 +77,13 @@ export function ListingCard({ listing }: { listing: Listing }) {
 
         <div className="mt-2 flex items-center justify-between border-t border-border pt-2 text-xs">
           <span className="font-medium text-muted-foreground">{listing.source?.name}</span>
-          <span className="text-muted-foreground">{formatDate(listing.auction_end_date)}</span>
+          <span className="text-muted-foreground">
+            {listing.auction_end_date ? `Ends ${formatDate(listing.auction_end_date)}` : null}
+          </span>
         </div>
+        {updated && (
+          <p className="text-[11px] text-muted-foreground/80">Updated {updated}</p>
+        )}
       </div>
     </Link>
   )

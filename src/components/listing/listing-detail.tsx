@@ -24,7 +24,9 @@ import {
   formatDateTime,
   formatLocation,
   formatNumber,
+  formatRelativeTime,
 } from "@/lib/format"
+import { effectiveStatus } from "@/lib/listings/status"
 import { cn } from "@/lib/utils"
 import type { Listing } from "@/types"
 
@@ -45,6 +47,8 @@ export function ListingDetail({
   const location = formatLocation(listing.location_city, listing.location_state)
   // The destination lives on the listing row; the tracker resolves it server side.
   const clickUrl = `/api/click?listingId=${encodeURIComponent(listing.id)}`
+  const status = effectiveStatus(listing)
+  const updated = formatRelativeTime(listing.last_synced_at ?? listing.updated_at)
 
   const quickSpecs = [
     { icon: Gauge, label: "Horsepower", value: listing.horsepower ? `${listing.horsepower} HP` : null },
@@ -90,7 +94,7 @@ export function ListingDetail({
         <div className="flex flex-col gap-8">
           <header className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={listing.status} />
+              <StatusBadge status={status} />
               {listing.is_featured && <Badge tone="primary">Featured</Badge>}
               {listing.is_sponsored && <Badge tone="amber">Sponsored</Badge>}
             </div>
@@ -163,7 +167,8 @@ export function ListingDetail({
           <section className="flex gap-3 rounded-lg border border-border bg-muted/40 p-4">
             <ShieldCheck className="size-5 shrink-0 text-primary" />
             <p className="text-xs leading-relaxed text-muted-foreground">
-              TractorAuction.com aggregates listings from third party auction sites. All bidding,
+              TractorAuction.com is a search and aggregation platform. We are not the auctioneer,
+              seller, or bidding platform. All bidding,
               payment, inspection, and transport are handled by{" "}
               <span className="font-medium text-foreground">
                 {listing.source?.name ?? "the auction company"}
@@ -179,7 +184,7 @@ export function ListingDetail({
 
             <div className="flex flex-col gap-1">
               <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                {listing.status === "sold" ? "Sold for" : "Current bid"}
+                {status === "sold" ? "Sold for" : status === "expired" ? "Final bid" : "Current bid"}
               </span>
               <span className="text-3xl font-bold text-foreground">
                 {formatCurrency(listing.current_bid) ?? "No bids yet"}
@@ -194,18 +199,25 @@ export function ListingDetail({
               )}
             </div>
 
-            {listing.auction_end_date && listing.status === "active" && (
+            {listing.auction_end_date && status === "active" && (
               <AuctionCountdown endDate={listing.auction_end_date} />
             )}
 
             {listing.auction_end_date && (
               <div className="flex items-start justify-between gap-3 border-t border-border pt-3 text-xs">
                 <span className="text-muted-foreground">
-                  {listing.status === "active" ? "Auction ends" : "Auction ended"}
+                  {status === "active" ? "Auction ends" : "Auction ended"}
                 </span>
                 <span className="text-right font-medium text-foreground">
                   {formatDateTime(listing.auction_end_date)}
                 </span>
+              </div>
+            )}
+
+            {updated && (
+              <div className="flex items-start justify-between gap-3 text-xs">
+                <span className="text-muted-foreground">Last updated</span>
+                <span className="text-right font-medium text-foreground">{updated}</span>
               </div>
             )}
 
@@ -217,7 +229,8 @@ export function ListingDetail({
                 <a href={clickUrl} target="_blank" rel="noopener noreferrer nofollow sponsored" />
               }
             >
-              View Auction on {listing.source?.name ?? "Source Site"}
+              {status === "active" ? "View Auction" : "View Ended Auction"} on{" "}
+              {listing.source?.name ?? "Source Site"}
               <ExternalLink className="size-4" />
             </Button>
             <p className="-mt-2 text-center text-[11px] text-muted-foreground">
@@ -235,7 +248,7 @@ export function ListingDetail({
               <h2 className="text-sm font-semibold text-foreground">About this source</h2>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 {listing.source.name} is one of the auction platforms we aggregate. Listing data was
-                last synced {formatDate(listing.updated_at) ?? "recently"}.
+                last updated {updated ?? "recently"}.
               </p>
               <Link
                 href={`/search?source_id=${encodeURIComponent(listing.source.id)}`}

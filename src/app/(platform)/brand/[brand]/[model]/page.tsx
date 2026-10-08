@@ -39,7 +39,7 @@ export async function generateMetadata(
 
   return {
     title: `${make} ${model} for Sale at Auction | TractorAuction.com`,
-    description: `Current ${make} ${model} auction listings with hours, horsepower and live bids, aggregated from every major auction site.`,
+    description: `Current ${make} ${model} auction listings with hours, horsepower and live bids, aggregated from multiple auction sites.`,
     alternates: { canonical: `/brand/${slugify(make)}/${slugify(model)}` },
   }
 }

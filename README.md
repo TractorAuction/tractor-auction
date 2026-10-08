@@ -84,7 +84,7 @@ supabase/migrations/0007_archive_and_alerts.sql   auction_results dedupe + alert
 Then seed:
 
 ```
-supabase/seed.sql            4 auction sources + 30 sample listings
+supabase/seed.sql            4 auction sources + 30 sample listings (LOCAL DEV ONLY)
 supabase/seed_outreach.sql   43 outreach prospects across 7 tiers
 supabase/seed_sources.sql    feed config + field maps for the priority sources
 ```

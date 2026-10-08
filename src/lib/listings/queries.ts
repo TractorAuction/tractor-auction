@@ -122,10 +122,13 @@ export async function searchListings(
   const safePage = Math.max(1, Math.trunc(page) || 1)
   const from = (safePage - 1) * pageSize
 
+  // The end-date guard covers the gap between an auction closing and the next
+  // expiry sweep, so a closed lot never shows as live for up to a cron interval.
   let query = supabase
     .from("listings")
     .select(LISTING_SELECT, { count: "exact" })
     .eq("status", "active")
+    .or(`auction_end_date.is.null,auction_end_date.gte.${new Date().toISOString()}`)
 
   const search = filters.query ? sanitizeQuery(filters.query) : ""
   if (search) {
@@ -316,4 +319,77 @@ export async function getRecentlyAdded(limit = 4): Promise<Listing[]> {
 export async function getEndingSoon(limit = 4): Promise<Listing[]> {
   const { listings } = await searchListings({ sort_by: "ending_soon" }, 1, limit)
   return listings
+}
+
+/** The homepage inventory figure. Same definition of "active" as search. */
+export async function getActiveListingCount(): Promise<number> {
+  const supabase = await createClient()
+  const { count, error } = await supabase
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "active")
+    .or(`auction_end_date.is.null,auction_end_date.gte.${new Date().toISOString()}`)
+
+  if (error) throw new Error(`Failed to count listings: ${error.message}`)
+  return count ?? 0
+}
+
+export type SourceSummary = { id: string; name: string; logo_url?: string }
+
+/**
+ * Sources that actually have live listings right now. The homepage names these
+ * and only these — naming an auction house we have no feed from would claim a
+ * partnership that does not exist.
+ */
+export async function getLiveSources(): Promise<SourceSummary[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("auction_sources")
+    .select("id, name, logo_url, listings!inner(id)")
+    .eq("status", "active")
+    .eq("listings.status", "active")
+    .limit(1, { referencedTable: "listings" })
+    .order("name")
+
+  if (error) throw new Error(`Failed to load live sources: ${error.message}`)
+
+  return (data ?? []).map((row) => ({
+    id: (row as Row).id as string,
+    name: (row as Row).name as string,
+    logo_url: optional<string>((row as Row).logo_url),
+  }))
+}
+
+export type AuctionResult = {
+  id: string
+  title: string
+  make?: string
+  finalPrice?: number
+  soldDate?: string
+  auctionCompany?: string
+}
+
+/** Most recent closed auctions from the archive, newest first. */
+export async function getRecentResults(limit = 4): Promise<AuctionResult[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from("auction_results")
+    .select("id, make, model, year, sold_price, sold_date, auction_company")
+    .not("sold_price", "is", null)
+    .order("sold_date", { ascending: false, nullsFirst: false })
+    .limit(limit)
+
+  if (error) throw new Error(`Failed to load auction results: ${error.message}`)
+
+  return (data ?? []).map((row) => {
+    const record = row as Row
+    return {
+      id: record.id as string,
+      title: [record.year, record.make, record.model].filter(Boolean).join(" ") || "Equipment",
+      make: optional<string>(record.make),
+      finalPrice: toNumber(record.sold_price),
+      soldDate: optional<string>(record.sold_date),
+      auctionCompany: optional<string>(record.auction_company),
+    }
+  })
 }

@@ -6,22 +6,21 @@ import { ListingCard } from "@/components/listing/listing-card"
 import { HeroSearch } from "@/components/search/hero-search"
 import { ImpressionTracker } from "@/components/listing/impression-tracker"
 import { getHomepagePlacement } from "@/lib/listings/promotions"
-import { getEndingSoon, getFeaturedListings } from "@/lib/listings/queries"
+import { formatCurrency, formatDate } from "@/lib/format"
+import {
+  getActiveListingCount,
+  getEndingSoon,
+  getFeaturedListings,
+  getLiveSources,
+  getRecentResults,
+} from "@/lib/listings/queries"
 import { getSearchFacets } from "@/lib/listings/search-index"
-
-const partners = [
-  { name: "AuctionTime", logo: "/sites/AuctionTime.svg" },
-  { name: "Ritchie Bros.", logo: "/sites/Ritchie Bros.svg" },
-  { name: "BigIron Auctions" },
-  { name: "IronPlanet" },
-  { name: "Purple Wave", logo: "/sites/Purple-Wave.svg" },
-]
 
 const features = [
   {
     icon: Search,
     title: "One Search. All Sites.",
-    description: "Search hundreds of auctions from multiple sources.",
+    description: "Search live auctions from multiple sources in one place.",
   },
   {
     icon: Bell,
@@ -40,60 +39,42 @@ const features = [
   },
 ]
 
-// Placeholder until auction_results is populated from expired/sold listings (Day 14).
-const recentResults = [
-  {
-    title: "2020 John Deere 8R 250",
-    soldFor: 168000,
-    date: "May 15, 2024",
-  },
-  {
-    title: "2017 Case IH Puma 240",
-    soldFor: 87500,
-    date: "May 14, 2024",
-  },
-  {
-    title: "2019 Fendt 724",
-    soldFor: 112000,
-    date: "May 13, 2024",
-  },
-  {
-    title: "2016 New Holland T8.390",
-    soldFor: 76000,
-    date: "May 12, 2024",
-  },
-]
-
-const stats = [
-  {
-    icon: Search,
-    title: "1000+",
-    description: "Active Auctions Updated Daily",
-  },
-  {
-    icon: Globe,
-    title: "All Major Sites",
-    description: "One search. All the top auction sites.",
-  },
-  {
-    icon: Clock,
-    title: "Save Time",
-    description: "Find the right tractor faster.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Better Decisions",
-    description: "Data, results, and tools you can trust.",
-  },
-]
-
 export default async function Home() {
-  const [featured, endingSoon, facets, homepageSlot] = await Promise.all([
-    getFeaturedListings(4),
-    getEndingSoon(4),
-    getSearchFacets(),
-    getHomepagePlacement(),
-  ])
+  const [featured, endingSoon, facets, homepageSlot, activeCount, liveSources, recentResults] =
+    await Promise.all([
+      getFeaturedListings(4),
+      getEndingSoon(4),
+      getSearchFacets(),
+      getHomepagePlacement(),
+      getActiveListingCount(),
+      getLiveSources(),
+      getRecentResults(4),
+    ])
+
+  // Every figure here is read from the database on each request. Nothing on
+  // this page may state a number or name a source that the data does not back.
+  const stats = [
+    {
+      icon: Search,
+      title: activeCount.toLocaleString("en-US"),
+      description: activeCount === 1 ? "Active auction right now" : "Active auctions right now",
+    },
+    {
+      icon: Globe,
+      title: `${liveSources.length} ${liveSources.length === 1 ? "Source" : "Sources"}`,
+      description: "Searched together in one place.",
+    },
+    {
+      icon: Clock,
+      title: "Save Time",
+      description: "Find the right tractor faster.",
+    },
+    {
+      icon: TrendingUp,
+      title: "Better Decisions",
+      description: "Compare listings and closing prices.",
+    },
+  ]
 
   return (
     <div className="flex flex-1 flex-col">
@@ -125,42 +106,43 @@ export default async function Home() {
             Find Tractors. <br /> Win More.
           </h1>
           <p className="max-w-md text-base text-white/90 drop-shadow-sm">
-            The most complete source for active and recent tractor auctions across all major
-            sites.
+            Search active and recent tractor auctions from multiple auction sites in one
+            place.
           </p>
           <HeroSearch makes={facets.makes} states={facets.states} />
         </div>
       </section>
 
-      <section className="border-b border-border bg-muted/40 px-6 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
-          <p className="text-sm font-medium text-muted-foreground">
-            We aggregate auctions from the industry&apos;s leading sites
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {partners.map((partner) =>
-              partner.logo ? (
-                <span key={partner.name} className="flex h-9 w-32 items-center justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={partner.logo}
-                    alt={partner.name}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </span>
-              ) : (
-                <span
-                  key={partner.name}
-                  className="text-lg font-bold tracking-tight text-foreground/70"
-                >
-                  {partner.name}
-                </span>
-              )
-            )}
-            <span className="text-sm text-muted-foreground">and more...</span>
+      {liveSources.length > 0 && (
+        <section className="border-b border-border bg-muted/40 px-6 py-8">
+          <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
+            <p className="text-sm font-medium text-muted-foreground">
+              Live listings currently aggregated from
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+              {liveSources.map((source) =>
+                source.logo_url ? (
+                  <span key={source.id} className="flex h-9 w-32 items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={source.logo_url}
+                      alt={source.name}
+                      className="max-h-full max-w-full object-contain"
+                    />
+                  </span>
+                ) : (
+                  <span
+                    key={source.id}
+                    className="text-lg font-bold tracking-tight text-foreground/70"
+                  >
+                    {source.name}
+                  </span>
+                )
+              )}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="border-b border-border px-6 py-10">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 sm:grid-cols-4">
@@ -246,40 +228,50 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="px-6 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-foreground">Recent Auction Results</h2>
-            <Link
-              href="/search?sort=recently_added"
-              className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
-            >
-              View all results <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {recentResults.map((result) => (
-              <div
-                key={result.title}
-                className="flex items-center gap-3 rounded-lg border border-border p-3"
+      {/* Only real closed auctions from auction_results; the section stays hidden
+          until there is at least one. */}
+      {recentResults.length > 0 && (
+        <section className="px-6 py-10">
+          <div className="mx-auto flex max-w-6xl flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-foreground">Recent Auction Results</h2>
+              <Link
+                href="/results"
+                className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
               >
-                <span className="flex size-14 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/40">
-                  <Tractor className="size-6" strokeWidth={1.25} />
-                </span>
-                <div className="flex flex-col gap-0.5">
-                  <p className="line-clamp-1 text-sm font-medium text-foreground">
-                    {result.title}
-                  </p>
-                  <p className="text-sm font-semibold text-primary">
-                    Sold for ${result.soldFor.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{result.date}</p>
+                View all results <ArrowRight className="size-3.5" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {recentResults.map((result) => (
+                <div
+                  key={result.id}
+                  className="flex items-center gap-3 rounded-lg border border-border p-3"
+                >
+                  <span className="flex size-14 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground/40">
+                    <Tractor className="size-6" strokeWidth={1.25} />
+                  </span>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="line-clamp-1 text-sm font-medium text-foreground">
+                      {result.title}
+                    </p>
+                    {result.finalPrice !== undefined && (
+                      <p className="text-sm font-semibold text-primary">
+                        Final bid {formatCurrency(result.finalPrice)}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {[formatDate(result.soldDate), result.auctionCompany]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="bg-[#1E4725] px-6 py-10 text-white">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 sm:grid-cols-4">

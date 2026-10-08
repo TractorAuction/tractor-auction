@@ -9,7 +9,7 @@ import { slugify } from "@/lib/seo/slug"
 export const metadata: Metadata = {
   title: "Recent Tractor Auction Results — Sale Prices | TractorAuction.com",
   description:
-    "See what tractors actually sold for at auction. Recent sale prices by make, model, year and hours, aggregated from every major auction site.",
+    "Closing bids from recent tractor auctions by make, model, year and hours, so you can judge whether a current bid is fair.",
   alternates: { canonical: "/results" },
 }
 
@@ -109,8 +109,8 @@ export default async function ResultsPage() {
       <header className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold text-foreground">Recent auction results</h1>
         <p className="max-w-2xl text-muted-foreground">
-          What tractors actually sold for, not what sellers asked. Use recent results to
-          judge whether a current bid is fair before you put your own number in.
+          Closing bids from auctions we tracked, not what sellers asked. Use recent results
+          to judge whether a current bid is fair before you put your own number in.
         </p>
       </header>
 
@@ -138,10 +138,10 @@ export default async function ResultsPage() {
                   Hours
                 </th>
                 <th scope="col" className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Sold for
+                  Final bid
                 </th>
                 <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Sold
+                  Closed
                 </th>
                 <th scope="col" className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Auction
@@ -195,8 +195,9 @@ export default async function ResultsPage() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Sale prices are reported by the originating auction company. Buyer premiums, taxes
-        and transport are not included.
+        Final bids are the last price published by the originating auction company when
+        the auction closed. A final bid is not always a completed sale (reserves may not
+        be met). Buyer premiums, taxes and transport are not included.
       </p>
     </div>
   )

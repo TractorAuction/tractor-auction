@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 export const metadata: Metadata = {
   title: "About TractorAuction.com — How We Work",
   description:
-    "TractorAuction.com is a search engine for tractor and farm equipment auctions. We aggregate listings from every major auction site and send you there to bid.",
+    "TractorAuction.com is a search engine for tractor and farm equipment auctions. We aggregate listings from multiple auction sites and send you there to bid.",
   alternates: { canonical: "/about" },
 }
 

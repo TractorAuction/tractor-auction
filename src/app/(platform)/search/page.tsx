@@ -20,7 +20,7 @@ import { getSearchFacets, searchListingsSafe } from "@/lib/listings/search-index
 export const metadata: Metadata = {
   title: "Search Tractor Auctions — TractorAuction.com",
   description:
-    "Search active tractor and agricultural equipment auctions from every major auction site in one place.",
+    "Search active tractor and agricultural equipment auctions from multiple auction sites in one place.",
 }
 
 function ResultsSkeleton() {

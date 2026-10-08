@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TractorAuction.com — The #1 Source for Tractor Auctions",
   description:
-    "Search and compare tractor and ag equipment auctions across all major sites in one place.",
+    "Search and compare tractor and ag equipment auctions from multiple auction sites in one place.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

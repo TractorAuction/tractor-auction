@@ -1,3 +1,4 @@
+import { listingsIndex } from "@/lib/meilisearch/client"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
@@ -28,5 +29,24 @@ export async function expireEndedListings({
 
   if (error) throw new Error(`expiry sweep failed: ${error.message}`)
 
-  return data?.length ?? 0
+  const ids = (data ?? []).map((row) => row.id as string)
+  await markExpiredInIndex(ids)
+
+  return ids.length
+}
+
+/**
+ * Keeps the search index's status in step with Postgres. Best effort: search
+ * already re-checks status against Postgres when it hydrates results, so a
+ * failure here leaves a stale index document, never a stale result on screen.
+ */
+export async function markExpiredInIndex(ids: string[]): Promise<void> {
+  if (ids.length === 0) return
+  try {
+    await listingsIndex()
+      .updateDocuments(ids.map((id) => ({ id, status: "expired" })))
+      .waitTask()
+  } catch (error) {
+    console.error("[expire] could not update search index:", error)
+  }
 }
