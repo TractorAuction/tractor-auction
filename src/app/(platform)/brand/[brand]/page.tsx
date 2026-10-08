@@ -20,8 +20,8 @@ export async function generateMetadata(
   if (!make) return { title: "Brand not found — TractorAuction.com" }
 
   return {
-    title: `${make} Tractor Auctions — Used ${make} Tractors for Sale | TractorAuction.com`,
-    description: `Browse live ${make} tractor auctions from multiple auction sites. Compare year, hours, horsepower and current bids, then bid on the original auction site.`,
+    title: `${make} Tractor & Equipment Auctions — Used ${make} for Sale | TractorAuction.com`,
+    description: `Browse live ${make} tractor and equipment auctions from multiple auction sites. Compare year, hours, horsepower and current bids, then bid on the original auction site.`,
     alternates: { canonical: `/brand/${slugify(make)}` },
   }
 }
@@ -69,8 +69,8 @@ export default async function BrandPage(props: PageProps<"/brand/[brand]">) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: `${make} Tractor Auctions`,
-    description: `Live ${make} tractor auctions aggregated from major auction sites.`,
+    name: `${make} Tractor & Equipment Auctions`,
+    description: `Live ${make} tractor and equipment auctions aggregated from multiple auction sites.`,
     numberOfItems: listings.length,
   }
 
@@ -81,7 +81,7 @@ export default async function BrandPage(props: PageProps<"/brand/[brand]">) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <LandingPage
-        title={`${make} Tractor Auctions`}
+        title={`${make} Tractor & Equipment Auctions`}
         intro={`Every live ${make} auction we track, from all of our auction sources in one place. Compare hours, horsepower and current bids side by side, then click through to bid on the auction company's own site — we never take a cut.`}
         listings={listings}
         facts={landingFacts(listings)}

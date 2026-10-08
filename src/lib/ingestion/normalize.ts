@@ -260,7 +260,7 @@ const MAKE_KEYS = Object.keys(MAKE_ALIASES).sort((a, b) => b.length - a.length)
 
 const MODEL_FILLER = new Set([
   "tractor", "tractors", "compact", "utility", "farm", "backhoe", "loader", "motor", "grader",
-  "truck", "w", "with", "the", "a", "-",
+  "truck", "w", "with", "the", "a", "-", "2wd", "4wd", "mfwd", "fwd", "awd",
 ])
 
 /**
@@ -393,6 +393,48 @@ const DEFAULT_FIELD_MAP: Record<string, string> = {
   original_url: "original_url",
 }
 
+const KEEP_UPPER = new Set([
+  "UTV", "ATV", "PTO", "ROPS", "MFWD", "FWD", "2WD", "4WD", "AWD", "HP", "JD", "IH", "IHC",
+  "CAT", "NH", "MF", "LLC", "USA", "US", "GSA", "AC", "CVT", "GPS", "II", "III", "IV",
+])
+const KEEP_LOWER = new Set([
+  "a", "an", "and", "of", "or", "the", "to", "with", "w", "for", "in", "on", "ft", "lb", "lbs", "gal",
+])
+
+function caseWord(word: string, first: boolean): string {
+  const bare = word.replace(/[^A-Za-z0-9]/g, "")
+  // Digits mean a model number; a short word with no vowels is an
+  // abbreviation or a brand's initials ("JRB"), not a word to capitalise.
+  if (/\d/.test(word) || KEEP_UPPER.has(bare) || (bare.length <= 4 && !/[AEIOUY]/i.test(bare))) {
+    return word
+  }
+  const lower = word.toLowerCase()
+  if (!first && KEEP_LOWER.has(lower.replace(/[^a-z]/g, ""))) return lower
+  return lower.charAt(0).toUpperCase() + lower.slice(1)
+}
+
+/**
+ * Some feeds (GSA) send titles in all capitals, which reads as shouting on
+ * cards and pages. A title that is entirely upper case becomes title case;
+ * model numbers, anything with a digit and known abbreviations stay as they
+ * are. Mixed-case titles are left exactly as the source wrote them.
+ */
+export function tidyTitle(title: string | undefined): string | undefined {
+  const raw = text(title)
+  if (!raw) return raw
+  // "Shouting" = at least 80% of letters are capitals, so a stray unit like
+  // "12 ft" does not exempt an otherwise all-caps title.
+  const upper = (raw.match(/[A-Z]/g) ?? []).length
+  const lower = (raw.match(/[a-z]/g) ?? []).length
+  if (upper === 0 || upper / (upper + lower) < 0.8) return raw
+  let first = true
+  return raw.replace(/[A-Za-z0-9&'.]+/g, (word) => {
+    const cased = caseWord(word, first)
+    first = false
+    return cased
+  })
+}
+
 /** A feed with no title still gets one from its own fields, if it has any. */
 function derivedTitle(...parts: Array<string | undefined>): string | undefined {
   const joined = parts.filter(Boolean).join(" ").trim()
@@ -429,7 +471,7 @@ export function normalizeItem(
     return { error: { externalId, reason: "missing or unusable original_url" } }
   }
 
-  const title = field("title")
+  const title = tidyTitle(field("title"))
   const inferred = inferFromTitle(title)
   const make = canonicalMake(field("make")) ?? inferred.make
   const model = field("model") ?? inferred.model

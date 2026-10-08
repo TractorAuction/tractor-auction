@@ -27,6 +27,7 @@ import {
   formatRelativeTime,
 } from "@/lib/format"
 import { effectiveStatus } from "@/lib/listings/status"
+import { findCategory } from "@/lib/seo/slug"
 import { cn } from "@/lib/utils"
 import type { Listing } from "@/types"
 
@@ -57,11 +58,14 @@ export function ListingDetail({
     { icon: Cog, label: "Drive Type", value: listing.drive_type },
   ]
 
+  const knownSpecs = quickSpecs.filter((spec) => spec.value)
+  const categoryLabel = findCategory(listing.equipment_category)?.label ?? listing.equipment_category
+
   const fullSpecs = [
     { label: "Make", value: listing.make },
     { label: "Model", value: listing.model },
     { label: "Year", value: listing.year ? String(listing.year) : null },
-    { label: "Category", value: listing.equipment_category },
+    { label: "Category", value: categoryLabel },
     { label: "Horsepower", value: listing.horsepower ? `${listing.horsepower} HP` : null },
     { label: "Hours", value: formatNumber(listing.hours) },
     { label: "Drive Type", value: listing.drive_type },
@@ -108,7 +112,7 @@ export function ListingDetail({
                 </span>
               )}
               <span className="flex items-center gap-1.5">
-                <Tag className="size-4" /> {listing.equipment_category}
+                <Tag className="size-4" /> {categoryLabel}
               </span>
               {listing.external_id && (
                 <span className="flex items-center gap-1.5">
@@ -120,21 +124,23 @@ export function ListingDetail({
 
           <ListingGallery images={listing.images} title={title} category={listing.equipment_category} />
 
-          <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {quickSpecs.map((spec) => (
-              <div
-                key={spec.label}
-                className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3"
-              >
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <spec.icon className="size-3.5" /> {spec.label}
-                </span>
-                <span className="text-base font-semibold text-foreground">
-                  {spec.value ?? "—"}
-                </span>
-              </div>
-            ))}
-          </section>
+          {/* Only the specs the source actually gave: a row of dashes reads as
+              a broken page, not as "not provided". */}
+          {knownSpecs.length > 0 && (
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {knownSpecs.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex flex-col gap-1 rounded-lg border border-border bg-card p-3"
+                >
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <spec.icon className="size-3.5" /> {spec.label}
+                  </span>
+                  <span className="text-base font-semibold text-foreground">{spec.value}</span>
+                </div>
+              ))}
+            </section>
+          )}
 
           {listing.description && (
             <section className="flex flex-col gap-3">

@@ -319,8 +319,13 @@ export async function getFilterFacets(): Promise<FilterFacets> {
   }
 }
 
+/** The homepage's "Active Tractor Auctions" row: tractors only, by design. */
 export async function getFeaturedListings(limit = 4): Promise<Listing[]> {
-  const { listings } = await searchListings({ sort_by: "ending_soon" }, 1, limit * 4)
+  const { listings } = await searchListings(
+    { equipment_category: "tractor", sort_by: "ending_soon" },
+    1,
+    limit * 4
+  )
   const featured = listings.filter((listing) => listing.is_featured || listing.is_sponsored)
   // Fall back to the soonest-ending listings so the homepage is never empty
   // before any placements have been sold.

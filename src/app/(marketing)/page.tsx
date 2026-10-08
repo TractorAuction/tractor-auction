@@ -19,7 +19,7 @@ import { getSearchFacets } from "@/lib/listings/search-index"
 const features = [
   {
     icon: Search,
-    title: "One Search. All Sites.",
+    title: "One Search",
     description: "Search live auctions from multiple sources in one place.",
   },
   {
@@ -35,7 +35,7 @@ const features = [
   {
     icon: ClipboardList,
     title: "Auction Results",
-    description: "View recent sale prices and market trends.",
+    description: "See closing bids from recent auctions.",
   },
 ]
 
@@ -165,10 +165,10 @@ export default async function Home() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Active Tractor Auctions</h2>
             <Link
-              href="/search"
+              href="/search?category=tractor"
               className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
             >
-              View all auctions <ArrowRight className="size-3.5" />
+              View all tractors <ArrowRight className="size-3.5" />
             </Link>
           </div>
           {featured.length === 0 ? (

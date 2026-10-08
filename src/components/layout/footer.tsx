@@ -28,7 +28,13 @@ export function Footer() {
         <div className="flex flex-col gap-8 sm:flex-row sm:justify-between">
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex w-fit items-center gap-2">
-              <Image src="/logo.png" alt="TractorAuction.com" width={100} height={100} />
+              <Image
+                src="/logo-no-bg.png"
+                alt="TractorAuction.com"
+                width={471}
+                height={236}
+                className="h-12 w-auto"
+              />
             </Link>
             <p className="max-w-xs text-sm text-white/70">
               One search for active and recent tractor auctions from multiple auction

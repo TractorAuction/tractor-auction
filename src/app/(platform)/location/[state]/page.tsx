@@ -20,7 +20,7 @@ export async function generateMetadata(
   return {
     // Same rule as category pages: no live auctions here, no index entry.
     robots: live === 0 ? { index: false, follow: true } : undefined,
-    title: `Tractor Auctions in ${name} — Farm Equipment for Sale | TractorAuction.com`,
+    title: `Tractor & Equipment Auctions in ${name} | TractorAuction.com`,
     description: `Find live tractor and farm equipment auctions in ${name}. Compare listings from multiple auction sites, then bid on the auction company's own site.`,
     alternates: { canonical: `/location/${slugify(name ?? code)}` },
   }
@@ -57,7 +57,7 @@ export default async function LocationPage(props: PageProps<"/location/[state]">
 
   return (
     <LandingPage
-      title={`Tractor Auctions in ${name}`}
+      title={`Tractor & Equipment Auctions in ${name}`}
       intro={`Live tractor and farm equipment auctions located in ${name}, aggregated from every auction source we track. Buying close to home keeps transport costs down — these are the lots currently open near you.`}
       listings={listings}
       facts={landingFacts(listings)}

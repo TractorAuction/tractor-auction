@@ -119,8 +119,8 @@ export default async function ResultsPage() {
           <ClipboardList className="size-7 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">No results recorded yet</p>
           <p className="max-w-md text-sm text-muted-foreground">
-            Sale prices appear here as auctions we track close. Nothing in the current
-            catalogue has ended yet.
+            Closing bids appear here as the auctions we track close. None have closed
+            with a published bid yet.
           </p>
           <Link href="/search" className="text-sm font-medium text-primary hover:underline">
             Browse live auctions
