@@ -33,6 +33,10 @@ export function toSearchDocument(listing: Listing): ListingDocument {
     is_sponsored: listing.is_sponsored,
     auction_end_date: toEpochMs(listing.auction_end_date),
     created_at: toEpochMs(listing.created_at) ?? Date.now(),
+    _geo:
+      listing.location_lat !== undefined && listing.location_lng !== undefined
+        ? { lat: listing.location_lat, lng: listing.location_lng }
+        : null,
   }
 }
 

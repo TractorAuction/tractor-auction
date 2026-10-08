@@ -25,11 +25,14 @@ export function SortSelect({ value }: { value: SortOption }) {
         onChange={handleChange}
         className="h-9 rounded-lg border border-border bg-background px-2.5 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
       >
-        {Object.entries(SORT_LABELS).map(([option, label]) => (
-          <option key={option} value={option}>
-            {label}
-          </option>
-        ))}
+        {/* "Nearest first" needs a ZIP to measure from. */}
+        {Object.entries(SORT_LABELS)
+          .filter(([option]) => option !== "distance" || searchParams.has(FILTER_PARAMS.zip))
+          .map(([option, label]) => (
+            <option key={option} value={option}>
+              {label}
+            </option>
+          ))}
       </select>
     </label>
   )

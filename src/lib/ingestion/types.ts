@@ -26,6 +26,8 @@ export type NormalizedListing = {
   location_city?: string
   location_state?: string
   location_zip?: string
+  location_lat?: number
+  location_lng?: number
   auction_company?: string
   auction_end_date?: string
   auction_type?: string

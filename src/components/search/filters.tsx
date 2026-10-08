@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useId } from "react"
 
 import { Button } from "@/components/ui/button"
+import { RADIUS_OPTIONS } from "@/lib/geo/constants"
 import { FILTER_PARAMS } from "@/lib/listings/filters"
 import type { FilterFacets } from "@/lib/listings/queries"
 import { cn } from "@/lib/utils"
@@ -171,6 +172,38 @@ export function Filters({
             placeholder="Max $"
             className={fieldClass}
           />
+        </div>
+      </Field>
+
+      {/* Distance from the buyer, worked out from ZIP centroids: no browser
+          location prompt, and it works the same on every device. */}
+      <Field label="Near ZIP code">
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            inputMode="numeric"
+            autoComplete="postal-code"
+            pattern="\d{5}"
+            maxLength={5}
+            name={FILTER_PARAMS.zip}
+            defaultValue={searchParams.get(FILTER_PARAMS.zip) ?? ""}
+            placeholder="ZIP"
+            title="5-digit US ZIP code"
+            className={fieldClass}
+          />
+          <select
+            name={FILTER_PARAMS.radius_miles}
+            defaultValue={searchParams.get(FILTER_PARAMS.radius_miles) ?? ""}
+            aria-label="Distance from ZIP code"
+            className={fieldClass}
+          >
+            <option value="">Nationwide</option>
+            {RADIUS_OPTIONS.map((miles) => (
+              <option key={miles} value={miles}>
+                Within {miles} mi
+              </option>
+            ))}
+          </select>
         </div>
       </Field>
 

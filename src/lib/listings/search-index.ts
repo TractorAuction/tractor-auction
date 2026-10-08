@@ -1,3 +1,4 @@
+import { geocodeZip, milesToMeters } from "@/lib/geo/zip"
 import { listingsIndex } from "@/lib/meilisearch/client"
 import { createClient } from "@/lib/supabase/server"
 import type { SearchFilters, SearchResult, SortOption } from "@/types"
@@ -10,11 +11,19 @@ import { DEFAULT_PAGE_SIZE, getActiveSources, getFilterFacets, mapListing, searc
 // the comment on ListingDocument in lib/meilisearch/client.ts.
 const LISTING_SELECT = "*, source:auction_sources(*)"
 
-const SORT: Record<SortOption, string[]> = {
+const SORT: Record<Exclude<SortOption, "distance">, string[]> = {
   ending_soon: ["auction_end_date:asc"],
   recently_added: ["created_at:desc"],
   price_asc: ["current_bid:asc"],
   price_desc: ["current_bid:desc"],
+}
+
+function sortFor(filters: SearchFilters): string[] {
+  const origin = geocodeZip(filters.zip)
+  if (filters.sort_by === "distance") {
+    return origin ? [`_geoPoint(${origin.lat}, ${origin.lng}):asc`] : SORT.ending_soon
+  }
+  return SORT[filters.sort_by ?? "ending_soon"]
 }
 
 /** '"' and '\' would break out of a quoted filter value; a make or model
@@ -49,6 +58,13 @@ function buildFilter(filters: SearchFilters): string {
     if (Number.isFinite(ms)) clauses.push(`auction_end_date <= ${ms}`)
   }
 
+  const origin = geocodeZip(filters.zip)
+  if (origin && filters.radius_miles) {
+    clauses.push(
+      `_geoRadius(${origin.lat}, ${origin.lng}, ${Math.round(milesToMeters(filters.radius_miles))})`
+    )
+  }
+
   return clauses.join(" AND ")
 }
 
@@ -67,7 +83,7 @@ export async function searchListingsIndexed(
 
   const result = await listingsIndex().search(filters.query ?? "", {
     filter: buildFilter(filters),
-    sort: SORT[filters.sort_by ?? "ending_soon"],
+    sort: sortFor(filters),
     offset,
     limit: pageSize,
   })

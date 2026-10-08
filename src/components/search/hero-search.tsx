@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { RADIUS_OPTIONS } from "@/lib/geo/constants"
 import { FILTER_PARAMS } from "@/lib/listings/filters"
 
 const selectClass =
@@ -73,6 +74,31 @@ export function HeroSearch({
           placeholder="Year Max"
           className={`${selectClass} w-24`}
         />
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="postal-code"
+          pattern="\d{5}"
+          maxLength={5}
+          name={FILTER_PARAMS.zip}
+          placeholder="Your ZIP"
+          title="5-digit US ZIP code"
+          aria-label="Your ZIP code"
+          className={`${selectClass} w-24`}
+        />
+        <select
+          name={FILTER_PARAMS.radius_miles}
+          defaultValue=""
+          aria-label="Distance from ZIP code"
+          className={selectClass}
+        >
+          <option value="">Nationwide</option>
+          {RADIUS_OPTIONS.map((miles) => (
+            <option key={miles} value={miles}>
+              Within {miles} mi
+            </option>
+          ))}
+        </select>
         <select name={FILTER_PARAMS.location_state} defaultValue="" className={selectClass}>
           <option value="">Location</option>
           {states.map((state) => (

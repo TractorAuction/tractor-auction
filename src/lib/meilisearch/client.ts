@@ -45,6 +45,8 @@ export type ListingDocument = {
    *  and a missing date can be pushed to either end of "ending soon". */
   auction_end_date: number | null
   created_at: number
+  /** Meilisearch's reserved geo field; null when the listing has no location. */
+  _geo: { lat: number; lng: number } | null
 }
 
 export const LISTINGS_INDEX_SETTINGS = {
@@ -65,6 +67,7 @@ export const LISTINGS_INDEX_SETTINGS = {
     "auction_end_date",
     "is_featured",
     "is_sponsored",
+    "_geo",
   ],
-  sortableAttributes: ["auction_end_date", "created_at", "current_bid"],
+  sortableAttributes: ["auction_end_date", "created_at", "current_bid", "_geo"],
 }

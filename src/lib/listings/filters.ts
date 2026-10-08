@@ -1,3 +1,4 @@
+import { normalizeZip, RADIUS_OPTIONS } from "@/lib/geo/constants"
 import { EQUIPMENT_CATEGORIES } from "@/lib/seo/slug"
 import type { SearchFilters, SortOption } from "@/types"
 
@@ -20,6 +21,8 @@ export const FILTER_PARAMS = {
   location_state: "state",
   source_id: "source",
   ending_before: "ending_before",
+  zip: "zip",
+  radius_miles: "radius",
   sort_by: "sort",
 } as const satisfies Record<keyof SearchFilters, string>
 
@@ -28,6 +31,7 @@ const SORT_OPTIONS: SortOption[] = [
   "recently_added",
   "price_asc",
   "price_desc",
+  "distance",
 ]
 
 export const SORT_LABELS: Record<SortOption, string> = {
@@ -35,6 +39,7 @@ export const SORT_LABELS: Record<SortOption, string> = {
   recently_added: "Recently added",
   price_asc: "Price: low to high",
   price_desc: "Price: high to low",
+  distance: "Nearest first",
 }
 
 /** Accepts both Next's resolved searchParams object and a URLSearchParams. */
@@ -97,6 +102,11 @@ export function parseFilters(params: RawSearchParams): SearchFilters {
     location_state: read(params, FILTER_PARAMS.location_state),
     source_id: read(params, FILTER_PARAMS.source_id),
     ending_before: read(params, FILTER_PARAMS.ending_before),
+    zip: normalizeZip(read(params, FILTER_PARAMS.zip)),
+    // Only the offered radii are accepted; anything else means nationwide.
+    radius_miles: RADIUS_OPTIONS.find(
+      (miles) => miles === readNumber(params, FILTER_PARAMS.radius_miles)
+    ),
     sort_by: SORT_OPTIONS.includes(sort as SortOption) ? (sort as SortOption) : undefined,
   }
 }

@@ -1,3 +1,4 @@
+import { boundingBox, distanceMiles, geocodeZip } from "@/lib/geo/zip"
 import { createClient } from "@/lib/supabase/server"
 import type { AuctionSource, Listing, SearchFilters, SearchResult, SortOption } from "@/types"
 
@@ -105,7 +106,7 @@ function sanitizeQuery(query: string) {
   return query.replace(/[,()%\\*]/g, " ").trim()
 }
 
-const SORT_COLUMNS: Record<SortOption, { column: string; ascending: boolean }> = {
+const SORT_COLUMNS: Record<Exclude<SortOption, "distance">, { column: string; ascending: boolean }> = {
   // Listings with no end date sort last rather than pretending to be urgent.
   ending_soon: { column: "auction_end_date", ascending: true },
   recently_added: { column: "created_at", ascending: false },
@@ -154,7 +155,22 @@ export async function searchListings(
   if (filters.price_max !== undefined) query = query.lte("current_bid", filters.price_max)
   if (filters.ending_before) query = query.lte("auction_end_date", filters.ending_before)
 
-  const sort = SORT_COLUMNS[filters.sort_by ?? "ending_soon"]
+  // Fallback path only (Meilisearch does true radius + distance sort): a
+  // lat/lng box around the radius, which over-includes the corners slightly.
+  const origin = geocodeZip(filters.zip)
+  if (origin && filters.radius_miles) {
+    const box = boundingBox(origin, filters.radius_miles)
+    query = query
+      .gte("location_lat", box.minLat)
+      .lte("location_lat", box.maxLat)
+      .gte("location_lng", box.minLng)
+      .lte("location_lng", box.maxLng)
+  }
+
+  const sort =
+    SORT_COLUMNS[
+      !filters.sort_by || filters.sort_by === "distance" ? "ending_soon" : filters.sort_by
+    ]
 
   const { data, error, count } = await query
     .order(sort.column, { ascending: sort.ascending, nullsFirst: false })

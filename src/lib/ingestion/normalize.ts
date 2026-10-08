@@ -1,3 +1,4 @@
+import { geocodeZip } from "@/lib/geo/zip"
 import { US_STATES } from "@/lib/seo/slug"
 
 import type { FeedConfig, ItemError, NormalizedListing, RawItem } from "./types"
@@ -432,6 +433,10 @@ export function normalizeItem(
     max: new Date().getFullYear() + 2,
   })
   const endDate = parseDate(field("auction_end_date"))
+  // Radius search needs coordinates; feeds rarely send them but nearly always
+  // send a ZIP, which resolves offline against the bundled Census centroids.
+  const zip = field("location_zip")
+  const point = geocodeZip(zip)
 
   return {
     listing: {
@@ -450,7 +455,9 @@ export function normalizeItem(
       lot_number: field("lot_number"),
       location_city: field("location_city"),
       location_state: canonicalState(field("location_state")),
-      location_zip: field("location_zip"),
+      location_zip: zip,
+      location_lat: point?.lat,
+      location_lng: point?.lng,
       auction_company: field("auction_company"),
       auction_end_date: endDate,
       auction_type: field("auction_type"),

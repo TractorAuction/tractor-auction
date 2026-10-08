@@ -122,7 +122,8 @@ export type OutreachContact = {
   created_at: string
 }
 
-export type SortOption = "ending_soon" | "recently_added" | "price_asc" | "price_desc"
+/** "distance" only applies when a ZIP is given; it falls back to ending_soon otherwise. */
+export type SortOption = "ending_soon" | "recently_added" | "price_asc" | "price_desc" | "distance"
 
 export type SearchFilters = {
   query?: string
@@ -139,6 +140,10 @@ export type SearchFilters = {
   location_state?: string
   source_id?: string
   ending_before?: string
+  /** Buyer's ZIP; with radius_miles, limits results to that distance. */
+  zip?: string
+  /** Miles from zip. Undefined = nationwide (zip then only drives "nearest" sort). */
+  radius_miles?: number
   sort_by?: SortOption
 }
 
