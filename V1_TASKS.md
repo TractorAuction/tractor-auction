@@ -187,19 +187,19 @@ Verify Troy can manage everything without developer help:
 
 ### 21. Mobile Responsiveness QA
 Test on each device/size:
-- [ ] Desktop 1440px
-- [ ] Laptop 1280px
-- [ ] Tablet 768px
-- [ ] iPhone (375px)
-- [ ] Android (360px)
+- [x] Desktop 1440px
+- [x] Laptop 1280px
+- [x] Tablet 768px
+- [x] iPhone (375px)
+- [x] Android (360px)
 
 Test these specifically on mobile:
-- [ ] Search filters panel opens and works
-- [ ] Listing cards display correctly
-- [ ] Compare bar does not break layout
+- [x] Search filters panel opens and works
+- [x] Listing cards display correctly
+- [x] Compare bar does not break layout
 - [ ] Menus open and close
 - [ ] Forms are usable
-- [ ] Buttons are tappable (min 44px touch target)
+- [x] Buttons are tappable (min 44px touch target)
 
 ### 22. UI Polish Pass
 - [ ] Header: logo integration, spacing, nav consistency
