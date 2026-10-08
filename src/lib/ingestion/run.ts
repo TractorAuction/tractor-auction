@@ -282,17 +282,29 @@ async function upsertListings(
 
     const { data: existing, error: existingError } = await supabase
       .from("listings")
-      .select("external_id")
+      .select("external_id, images")
       .eq("source_id", sourceId)
       .in("external_id", ids)
 
     if (existingError) throw new Error(`existing-id lookup failed: ${existingError.message}`)
 
     const known = new Set((existing ?? []).map((row) => row.external_id as string))
+    // Photos added by hand in admin (for a feed that publishes none) survive a
+    // re-sync: an empty images array from the feed means "no photos supplied",
+    // not "delete the ones we have".
+    const existingImages = new Map(
+      (existing ?? []).map((row) => [row.external_id as string, row.images as unknown])
+    )
 
     const { error } = await supabase.from("listings").upsert(
       batch.map((listing) => ({
         ...listing,
+        images:
+          listing.images.length === 0 &&
+          Array.isArray(existingImages.get(listing.external_id)) &&
+          (existingImages.get(listing.external_id) as unknown[]).length > 0
+            ? existingImages.get(listing.external_id)
+            : listing.images,
         last_synced_at: now,
         updated_at: now,
         last_sync_run_id: runId,

@@ -44,6 +44,7 @@ const MAKE_ALIASES: Record<string, string> = {
   oliver: "Oliver",
   "international harvester": "International Harvester",
   ih: "International Harvester",
+  ihc: "International Harvester",
   international: "International Harvester",
   ford: "Ford",
   "white": "White",
@@ -68,17 +69,36 @@ const MAKE_ALIASES: Record<string, string> = {
 /**
  * Category is a closed set in the UI (EQUIPMENT_CATEGORIES drives the category
  * pages), so free-text equipment descriptions are bucketed rather than stored raw.
- * Order matters: the first match wins, so narrower terms come first.
+ * Order matters: the first match wins, so narrower terms come first — and the
+ * non-agricultural buckets come before "tractor", because a "truck tractor" is
+ * a semi and a "tractor loader backhoe" is a backhoe, not a farm tractor.
  */
 const CATEGORY_PATTERNS: Array<[RegExp, string]> = [
+  [/\b(trucks?|day cab|sleeper cab|semi|pickup|dump body|(?:semi|flatbed|lowboy|gooseneck|cargo) trailer)\b/i, "truck-trailer"],
+  [/\b(backhoe|excavator|motor grader|grader|bull ?dozer|dozer|trencher|compactor|telehandler|wheel loader)\b/i, "construction"],
   [/\b(skid[\s-]?steer|track loader|compact track)\b/i, "skid-steer"],
-  [/\b(combine|harvester|header|corn head)\b/i, "combine"],
-  [/\b(planter|drill|seeder|air seeder)\b/i, "planter"],
+  [/\b(combines?|corn head|grain head|draper head)\b/i, "combine"],
+  [/\b(planter|grain drill|seeder|air seeder)\b/i, "planter"],
   [/\b(sprayer|applicator|spreader|floater)\b/i, "sprayer"],
-  [/\b(disk|disc|ripper|cultivator|field cultivator|tillage|plow|harrow)\b/i, "tillage"],
+  [/\b(disk|disc|ripper|cultivator|tillage|plow|harrow|tiller|soil preparation)\b/i, "tillage"],
   [/\b(baler|mower|windrower|swather|rake|tedder|hay|forage)\b/i, "hay-forage"],
-  [/\btractor\b/i, "tractor"],
+  [/\btractors?\b/i, "tractor"],
+  // After "tractor", so "Tractor w/ Loader and Forklift Attachments" stays a tractor.
+  [/\b(attachments?|implements?|pallet forks?|angle blade|box blade|bucket|three[\s-]point|3[\s-]point)\b/i, "attachment"],
 ]
+
+/**
+ * Manufacturer names that contain category words. "International Harvester"
+ * once filed an IHC backhoe under combines because "harvester" matched.
+ */
+const MAKE_NOISE = /\b(international harvester|ihc)\b/gi
+
+/**
+ * Pickup and logistics boilerplate that names equipment without describing the
+ * lot: "dock can accommodate a tractor trailer size truck" put a printer in
+ * trucks. Exported for connectors that pre-filter on description text.
+ */
+export const LOGISTICS_NOISE = /\b(tractor[\s-]trailers?|semi[\s-]trucks?|trailer size|size truck|truck access|loading dock)\b/gi
 
 const VALID_CATEGORIES = new Set([
   "tractor",
@@ -88,6 +108,10 @@ const VALID_CATEGORIES = new Set([
   "tillage",
   "hay-forage",
   "skid-steer",
+  "attachment",
+  "construction",
+  "truck-trailer",
+  "other",
 ])
 
 const STATE_NAME_TO_CODE = new Map(
@@ -193,9 +217,25 @@ export function canonicalState(value: string | undefined): string | undefined {
   return undefined
 }
 
+function matchCategory(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  const haystack = value.replace(MAKE_NOISE, " ").replace(LOGISTICS_NOISE, " ")
+  for (const [pattern, category] of CATEGORY_PATTERNS) {
+    if (pattern.test(haystack)) return category
+  }
+  return undefined
+}
+
+/**
+ * The title is what the seller called the item, so it decides first. The
+ * description only breaks a tie when the title names no equipment type at
+ * all: descriptions mention tractors constantly ("fits any 40 HP tractor"),
+ * and letting them vote equally put implements and trucks in tractor search.
+ */
 export function canonicalCategory(
   explicit: string | undefined,
-  ...fallbacks: Array<string | undefined>
+  title: string | undefined,
+  description?: string
 ): string {
   const raw = text(explicit)
   if (raw) {
@@ -203,14 +243,67 @@ export function canonicalCategory(
     if (VALID_CATEGORIES.has(slug)) return slug
   }
 
-  const haystack = [raw, ...fallbacks].filter(Boolean).join(" ")
-  for (const [pattern, category] of CATEGORY_PATTERNS) {
-    if (pattern.test(haystack)) return category
+  // The description is only consulted for a recognised manufacturer's
+  // equipment ("John Deere 410-G", described as a backhoe); for an unbranded
+  // lot it is too noisy to trust. Anything not clearly identified lands in
+  // "other", never in "tractor": tractor search must only return tractors.
+  const fromDescription = inferFromTitle(title).make ? matchCategory(description) : undefined
+  return matchCategory(raw) ?? matchCategory(title) ?? fromDescription ?? "other"
+}
+
+/** Short or common-word aliases that only count as a make at the very start of
+ *  a title ("Case tractor"), never mid-sentence ("white pickup", "in case"). */
+const AMBIGUOUS_MAKES = new Set(["case", "white", "same", "cat", "ls", "ih", "jd", "nh", "mf", "international", "ford"])
+
+const MAKE_KEYS = Object.keys(MAKE_ALIASES).sort((a, b) => b.length - a.length)
+
+const MODEL_FILLER = new Set([
+  "tractor", "tractors", "compact", "utility", "farm", "backhoe", "loader", "motor", "grader",
+  "truck", "w", "with", "the", "a", "-",
+])
+
+/**
+ * Feeds like GSA Auctions carry one free-text name ("2015 JOHN DEERE
+ * TRACTOR-6145R") and no make/model/year fields. Without these, brand pages,
+ * the make filter and comparisons are empty for the whole source.
+ */
+export function inferFromTitle(title: string | undefined): {
+  year?: string
+  make?: string
+  model?: string
+} {
+  const raw = text(title)
+  if (!raw) return {}
+
+  const yearMatch = raw.match(/^\s*((?:19|20)\d{2})\b/)
+  const rest = (yearMatch ? raw.slice(yearMatch[0].length) : raw).trim()
+  const lower = rest.toLowerCase()
+
+  let make: string | undefined
+  let afterMake = ""
+  for (const key of MAKE_KEYS) {
+    const pattern = new RegExp(`(^|[^a-z])${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?=$|[^a-z])`, "i")
+    const match = pattern.exec(lower)
+    if (!match) continue
+    const start = match.index + match[1].length
+    if (AMBIGUOUS_MAKES.has(key) && start !== 0) continue
+    make = MAKE_ALIASES[key]
+    afterMake = rest.slice(start + key.length)
+    break
   }
 
-  // The platform is tractor-first and the column is non-null, so an
-  // unclassifiable item lands in the default bucket rather than blocking ingest.
-  return "tractor"
+  let model: string | undefined
+  if (make) {
+    const tokens = afterMake.split(/[\s,/]+|(?<=[a-z])-(?=\d)/i).filter(Boolean)
+    for (const token of tokens) {
+      const cleaned = token.replace(/^[^a-z0-9]+|[^a-z0-9]+$/gi, "")
+      if (!cleaned || MODEL_FILLER.has(cleaned.toLowerCase())) continue
+      if (/\d/.test(cleaned) && cleaned.length <= 12) model = cleaned.toUpperCase()
+      break
+    }
+  }
+
+  return { year: yearMatch?.[1], make, model }
 }
 
 /**
@@ -327,13 +420,17 @@ export function normalizeItem(
   }
 
   const title = field("title")
-  const make = canonicalMake(field("make"))
-  const model = field("model")
+  const inferred = inferFromTitle(title)
+  const make = canonicalMake(field("make")) ?? inferred.make
+  const model = field("model") ?? inferred.model
   const description = field("description")
 
   // Parsed before the title so a rejected year cannot leak into it: a row whose
   // year fails validation must not end up titled "9999 John Deere 6155R".
-  const year = parseInteger(field("year"), { min: 1900, max: new Date().getFullYear() + 2 })
+  const year = parseInteger(field("year") ?? inferred.year, {
+    min: 1900,
+    max: new Date().getFullYear() + 2,
+  })
   const endDate = parseDate(field("auction_end_date"))
 
   return {

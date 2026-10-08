@@ -1,3 +1,4 @@
+import { EQUIPMENT_CATEGORIES } from "@/lib/seo/slug"
 import type { SearchFilters, SortOption } from "@/types"
 
 /**
@@ -55,12 +56,35 @@ function readNumber(params: RawSearchParams, key: string): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
+/** "tractors", "Tractor", "skid steers", "combines" → the category value. */
+const CATEGORY_WORDS = new Map<string, string>(
+  EQUIPMENT_CATEGORIES.flatMap((category) => {
+    const words = [category.slug, category.value, category.label].map((word) =>
+      word.toLowerCase().replace(/[^a-z]+/g, " ").trim()
+    )
+    return words.flatMap((word) => [word, word.replace(/s$/, "")]).map((word) => [word, category.value])
+  })
+)
+
+/**
+ * A search box query that is just an equipment type is a category filter, not
+ * a text search: free text "tractors" also matches a truck whose description
+ * mentions a tractor trailer, while the category holds tractors only.
+ */
+function categoryFromQuery(query: string | undefined): string | undefined {
+  if (!query) return undefined
+  return CATEGORY_WORDS.get(query.toLowerCase().replace(/[^a-z]+/g, " ").trim())
+}
+
 export function parseFilters(params: RawSearchParams): SearchFilters {
   const sort = read(params, FILTER_PARAMS.sort_by)
+  const rawQuery = read(params, FILTER_PARAMS.query)
+  const explicitCategory = read(params, FILTER_PARAMS.equipment_category)
+  const queryCategory = explicitCategory ? undefined : categoryFromQuery(rawQuery)
 
   return {
-    query: read(params, FILTER_PARAMS.query),
-    equipment_category: read(params, FILTER_PARAMS.equipment_category),
+    query: queryCategory ? undefined : rawQuery,
+    equipment_category: explicitCategory ?? queryCategory,
     make: read(params, FILTER_PARAMS.make),
     model: read(params, FILTER_PARAMS.model),
     year_min: readNumber(params, FILTER_PARAMS.year_min),

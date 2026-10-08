@@ -16,6 +16,7 @@ import {
 } from "@/lib/listings/filters"
 import { getFeaturedSource, getPromotedListings, promotedIds } from "@/lib/listings/promotions"
 import { getSearchFacets, searchListingsSafe } from "@/lib/listings/search-index"
+import { findCategory } from "@/lib/seo/slug"
 
 export const metadata: Metadata = {
   title: "Search Tractor Auctions — TractorAuction.com",
@@ -74,7 +75,9 @@ export default async function SearchPage(props: PageProps<"/search">) {
 
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold text-foreground">
-          {filters.query ? `Results for “${filters.query}”` : "Tractor Auctions"}
+          {filters.query
+            ? `Results for “${filters.query}”`
+            : `${findCategory(filters.equipment_category ?? "")?.label ?? "All Equipment"} Auctions`}
         </h1>
         <p className="text-sm text-muted-foreground">
           {total === 0

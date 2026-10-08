@@ -1,6 +1,6 @@
 import Link from "next/link"
 
-import { setListingStatus, toggleListingFlag } from "@/app/admin/actions"
+import { setListingImages, setListingStatus, toggleListingFlag } from "@/app/admin/actions"
 import { Badge, DataTable } from "@/components/admin/data-table"
 import { Button } from "@/components/ui/button"
 import { ADMIN_PAGE_SIZE, getAdminListings, getAdminSources } from "@/lib/admin/queries"
@@ -109,6 +109,29 @@ export default async function AdminListingsPage(props: PageProps<"/admin/listing
                     .filter(Boolean)
                     .join(" · ")}
                 </span>
+                {/* A paid or featured placement must never show the photo
+                    placeholder, so a missing photo there is flagged for a
+                    manual add rather than left for a visitor to find. */}
+                {(row.is_featured || row.is_sponsored) && row.images.length === 0 && (
+                  <details className="mt-1 text-xs">
+                    <summary className="w-fit cursor-pointer">
+                      <Badge tone="warning">Needs photo</Badge>
+                    </summary>
+                    <form action={setListingImages} className="mt-2 flex flex-col gap-2">
+                      <input type="hidden" name="id" value={row.id} />
+                      <textarea
+                        name="images"
+                        rows={2}
+                        required
+                        placeholder="https://… image URLs, one per line"
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs outline-none focus-visible:border-ring"
+                      />
+                      <Button type="submit" size="sm" variant="outline" className="w-fit">
+                        Save photos
+                      </Button>
+                    </form>
+                  </details>
+                )}
               </div>
             ),
           },

@@ -96,6 +96,10 @@ export const EQUIPMENT_CATEGORIES = [
   { slug: "tillage", label: "Tillage Equipment", value: "tillage" },
   { slug: "hay-forage", label: "Hay & Forage", value: "hay-forage" },
   { slug: "skid-steer", label: "Skid Steers", value: "skid-steer" },
+  { slug: "attachment", label: "Attachments & Implements", value: "attachment" },
+  { slug: "construction", label: "Construction Equipment", value: "construction" },
+  { slug: "truck-trailer", label: "Trucks & Trailers", value: "truck-trailer" },
+  { slug: "other", label: "Other Equipment", value: "other" },
 ]
 
 export function findCategory(slug: string) {

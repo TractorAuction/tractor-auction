@@ -1,4 +1,5 @@
 import { fetchFeed } from "../fetch"
+import { LOGISTICS_NOISE } from "../normalize"
 import type { Connector, ConnectorContext, RawItem } from "../types"
 
 /**
@@ -139,7 +140,10 @@ const AG_MAKES =
   /\b(john deere|kubota|case\s?ih|new holland|massey ferguson|fendt|claas|international harvester|allis[\s-]?chalmers|mccormick|deutz(?:-?fahr)?|same tractor|steiger|landini|valtra|kinze|great plains|vermeer|bush ?hog|land ?pride|krone|hesston|gleaner|agco)\b/i
 
 function isAgEquipment(text: string): boolean {
-  return EQUIPMENT_PHRASES.test(text) || AG_MAKES.test(text)
+  // Pickup instructions routinely mention a "tractor trailer size truck",
+  // which once let a printer lot through as farm equipment.
+  const cleaned = text.replace(LOGISTICS_NOISE, " ")
+  return EQUIPMENT_PHRASES.test(cleaned) || AG_MAKES.test(cleaned)
 }
 
 function str(value: unknown): string | undefined {
