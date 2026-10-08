@@ -50,18 +50,18 @@ WHERE auction_end_date < NOW() AND status = 'active';
 - [ ] Current bid and bid count must reflect source data on each sync
 
 ### 7. Missing Images
-- [ ] Audit why images are not flowing through from source connectors
+- [x] Audit why images are not flowing through from source connectors
 - [ ] Fix image import in normalization layer for each active connector
 - [ ] Images array in listings table should never be empty if source has photos
 - [ ] Show first image on ListingCard, gallery on listing detail page
 - [x] If source has no images: show a clean equipment silhouette placeholder, NOT a broken image or "No Photo" text box
-- [ ] Never show placeholder on featured or sponsored listings, flag for manual image add
+- [x] Never show placeholder on featured or sponsored listings, flag for manual image add
 
 ### 8. Equipment Classification
-- [ ] Fix normalization logic to correctly classify tractors vs attachments vs other equipment
-- [ ] Add equipment_category validation in ingestion worker
-- [ ] Anything not clearly a tractor should go to its own category, not appear in tractor search
-- [ ] Test: search "tractors" and verify 100% of results are tractors
+- [x] Fix normalization logic to correctly classify tractors vs attachments vs other equipment
+- [x] Add equipment_category validation in ingestion worker
+- [x] Anything not clearly a tractor should go to its own category, not appear in tractor search
+- [x] Test: search "tractors" and verify 100% of results are tractors
 
 ### 9. Outreach Agent (Activate now, this is in the SOW)
 - [x] Confirm outreach CRM is accessible at /admin/outreach
