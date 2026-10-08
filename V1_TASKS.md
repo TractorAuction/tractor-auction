@@ -43,11 +43,11 @@ WHERE auction_end_date < NOW() AND status = 'active';
 ## PRIORITY 2 — CORE FUNCTIONALITY
 
 ### 6. Auction Data Sync / Staleness
-- [ ] Review sync frequency per source connector
+- [x] Review sync frequency per source connector
 - [x] Add "Last Updated" timestamp to every listing card and detail page
 - [x] Format: "Updated 2 hours ago" using relative time
-- [ ] If sync is failing silently, add error logging per source run
-- [ ] Current bid and bid count must reflect source data on each sync
+- [x] If sync is failing silently, add error logging per source run
+- [x] Current bid and bid count must reflect source data on each sync
 
 ### 7. Missing Images
 - [x] Audit why images are not flowing through from source connectors
@@ -67,10 +67,10 @@ WHERE auction_end_date < NOW() AND status = 'active';
 - [x] Confirm outreach CRM is accessible at /admin/outreach
 - [x] Verify 43 companies are loaded in database
 - [x] Add ANTHROPIC_API_KEY and RESEND_API_KEY to production env
-- [ ] Test AI email generation for one company end to end
+- [x] Test AI email generation for one company end to end
 - [ ] Test send and confirm status updates to "contacted"
 - [ ] Send Tier 1 batch (11 companies) this week
-- [ ] Document for Troy: how to access, how to use, how to track responses
+- [x] Document for Troy: how to access, how to use, how to track responses
 
 ---
 
@@ -78,110 +78,110 @@ WHERE auction_end_date < NOW() AND status = 'active';
 
 ### 10. Search and Filter QA
 Test every combination and confirm it returns accurate results:
-- [ ] Make filter
-- [ ] Model filter
-- [ ] Year range
-- [ ] Hours max
-- [ ] Horsepower range
-- [ ] Location / state
-- [ ] Auction source
-- [ ] Price / current bid range
-- [ ] Auction ending date
-- [ ] Category
-- [ ] Sorting: ending soon, recently added, price asc, price desc
-- [ ] Pagination: page 2, page 3, last page
-- [ ] Combined filters: e.g. John Deere + Texas + under 2000 hours
+- [x] Make filter
+- [x] Model filter
+- [x] Year range
+- [x] Hours max
+- [x] Horsepower range
+- [x] Location / state
+- [x] Auction source
+- [x] Price / current bid range
+- [x] Auction ending date
+- [x] Category
+- [x] Sorting: ending soon, recently added, price asc, price desc
+- [x] Pagination: page 2, page 3, last page
+- [x] Combined filters: e.g. John Deere + Texas + under 2000 hours
 
 ### 11. Location / ZIP Radius Search
-- [ ] Confirm ZIP code search is functional
-- [ ] Add radius options: 50, 100, 250, 500 miles, Nationwide
-- [ ] Use lat/lng on listings table for distance calculation
-- [ ] If not built yet: add a geocoding step in the ingestion worker to convert location to lat/lng
-- [ ] Heavy equipment buyers rely on this heavily, make it work well
+- [x] Confirm ZIP code search is functional
+- [x] Add radius options: 50, 100, 250, 500 miles, Nationwide
+- [x] Use lat/lng on listings table for distance calculation
+- [x] If not built yet: add a geocoding step in the ingestion worker to convert location to lat/lng
+- [x] Heavy equipment buyers rely on this heavily, make it work well
 
 ### 12. Saved Searches / Watchlist / Alerts
 Test these as real user workflows, not just page existence:
 - [ ] Create account end to end
-- [ ] Login and logout
+- [x] Login and logout
 - [ ] Password reset email received and works
-- [ ] Save a listing to watchlist
-- [ ] Remove a listing from watchlist
-- [ ] Save a search with filters
-- [ ] Edit a saved search
-- [ ] Delete a saved search
-- [ ] Enable email alert on a saved search
+- [x] Save a listing to watchlist
+- [x] Remove a listing from watchlist
+- [x] Save a search with filters
+- [x] Edit a saved search
+- [x] Delete a saved search
+- [x] Enable email alert on a saved search
 - [ ] Trigger alert manually and confirm email arrives
-- [ ] Alert email link goes to the correct listing or search
+- [x] Alert email link goes to the correct listing or search
 
 ### 13. Compare Feature
-- [ ] Select 2 listings and trigger compare
-- [ ] Select 3 and 4 listings
-- [ ] Compare page shows side by side: make, model, year, hours, horsepower, price, location, auction end date, source
+- [x] Select 2 listings and trigger compare
+- [x] Select 3 and 4 listings
+- [x] Compare page shows side by side: make, model, year, hours, horsepower, price, location, auction end date, source
 - [ ] Compare works on mobile
-- [ ] Share compare URL works
+- [x] Share compare URL works
 
 ### 14. View Auction / Bid Now Links
-- [ ] Test EVERY current outbound link manually
-- [ ] Each must go to the correct specific machine, not a category page
-- [ ] No 404s
-- [ ] No links to ended auctions presented as active
-- [ ] Click tracking fires correctly on each outbound click
+- [x] Test EVERY current outbound link manually
+- [x] Each must go to the correct specific machine, not a category page
+- [x] No 404s
+- [x] No links to ended auctions presented as active
+- [x] Click tracking fires correctly on each outbound click
 
 ### 15. Partner Center
 Confirm which of these are fully working vs placeholder:
-- [ ] Auction company can submit an application
-- [ ] Application captures: company name, contact, website, feed type, feed URL
-- [ ] Admin receives and can review applications
-- [ ] Admin can approve, reject, or mark as pending
-- [ ] Partner can submit manual listings
-- [ ] Partner analytics: clicks sent to their listings
+- [x] Auction company can submit an application
+- [x] Application captures: company name, contact, website, feed type, feed URL
+- [x] Admin receives and can review applications
+- [x] Admin can approve, reject, or mark as pending
+- [x] Partner can submit manual listings
+- [x] Partner analytics: clicks sent to their listings
 - [ ] Document clearly for Troy which functions are live today
 
 ### 16. Monetization
 Confirm which of these are real vs visual placeholder:
-- [ ] Sponsored listing badge shows on ListingCard
-- [ ] Sponsored listings appear at top of search results
-- [ ] Featured listings work
-- [ ] Featured auction source placement works
-- [ ] Admin can assign sponsored/featured to any listing
-- [ ] Admin can assign featured to any source
-- [ ] Impression counter increments on page load for sponsored placements
-- [ ] Click counter increments on outbound click for sponsored placements
-- [ ] All sponsored content is clearly labeled in the UI
+- [x] Sponsored listing badge shows on ListingCard
+- [x] Sponsored listings appear at top of search results
+- [x] Featured listings work
+- [x] Featured auction source placement works
+- [x] Admin can assign sponsored/featured to any listing
+- [x] Admin can assign featured to any source
+- [x] Impression counter increments on page load for sponsored placements
+- [x] Click counter increments on outbound click for sponsored placements
+- [x] All sponsored content is clearly labeled in the UI
 
 ### 17. Admin Dashboard
 Verify Troy can manage everything without developer help:
-- [ ] Listings: view, search, filter, manually add, deactivate
-- [ ] Data sources: add, edit, toggle active/inactive
-- [ ] Partners: view applications, approve, reject
-- [ ] Users: view list, basic management
-- [ ] Sponsored placements: assign, schedule, remove
-- [ ] Outreach: full CRM access
-- [ ] Analytics: total listings, active sources, outbound clicks today, new signups
-- [ ] Feed status: last sync time and errors per source
+- [x] Listings: view, search, filter, manually add, deactivate
+- [x] Data sources: add, edit, toggle active/inactive
+- [x] Partners: view applications, approve, reject
+- [x] Users: view list, basic management
+- [x] Sponsored placements: assign, schedule, remove
+- [x] Outreach: full CRM access
+- [x] Analytics: total listings, active sources, outbound clicks today, new signups
+- [x] Feed status: last sync time and errors per source
 
 ### 18. Data Deduplication
-- [ ] Confirm unique constraint on (source_id, external_id) is active
-- [ ] Test: ingest the same listing twice and verify only one record exists
-- [ ] If the same tractor appears from two different sources, verify they show as separate listings with correct source attribution
+- [x] Confirm unique constraint on (source_id, external_id) is active
+- [x] Test: ingest the same listing twice and verify only one record exists
+- [x] If the same tractor appears from two different sources, verify they show as separate listings with correct source attribution
 
 ---
 
 ## PRIORITY 4 — POLISH AND COMPLETENESS
 
 ### 19. SEO Pages
-- [ ] /brand/[brand] pages have correct title, meta description, h1, and real content
-- [ ] /brand/[brand]/[model] pages same
-- [ ] /category/[category] and /location/[state] same
-- [ ] No empty SEO pages being generated with no listings
-- [ ] Sitemap.xml includes all real pages
-- [ ] Canonical URLs are correct on all listing pages
-- [ ] JSON-LD structured data on listing pages
+- [x] /brand/[brand] pages have correct title, meta description, h1, and real content
+- [x] /brand/[brand]/[model] pages same
+- [x] /category/[category] and /location/[state] same
+- [x] No empty SEO pages being generated with no listings
+- [x] Sitemap.xml includes all real pages
+- [x] Canonical URLs are correct on all listing pages
+- [x] JSON-LD structured data on listing pages
 
 ### 20. Legal Pages
-- [ ] Add Privacy Policy page at /privacy
-- [ ] Add Terms of Use page at /terms
-- [ ] Add links to both in footer
+- [x] Add Privacy Policy page at /privacy
+- [x] Add Terms of Use page at /terms
+- [x] Add links to both in footer
 - [x] Add clear language on homepage and listing pages: "TractorAuction.com is a search and aggregation platform. We are not the auctioneer, seller, or bidding platform."
 - [ ] Troy will provide the actual Privacy Policy and Terms content
 
