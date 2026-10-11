@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import { submitPartnerApplication } from "@/app/partner/actions"
+import { TermsCheckbox } from "@/components/account/terms-checkbox"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
@@ -81,6 +82,8 @@ export default async function PartnerRegisterPage(props: PageProps<"/partner/reg
         <p className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {error === "missing"
             ? "Please provide at least a company name and a contact email."
+            : error === "terms"
+              ? "Please accept the Terms and Conditions and Privacy Policy to apply."
             : "Something went wrong submitting your application. Please try again."}
         </p>
       )}
@@ -136,8 +139,9 @@ export default async function PartnerRegisterPage(props: PageProps<"/partner/reg
           />
         </Field>
 
-        <div className="flex flex-col gap-2 sm:col-span-2">
-          <Button type="submit" size="lg">
+        <div className="flex flex-col gap-3 sm:col-span-2">
+          <TermsCheckbox />
+          <Button type="submit" size="lg" className="w-fit">
             Submit application
           </Button>
           <p className="text-xs text-muted-foreground">

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { revalidatePath } from "next/cache"
 
 import { canonicalCategory, canonicalMake, canonicalState } from "@/lib/ingestion/normalize"
+import { TERMS_VERSION } from "@/content/legal/version"
 import { getCurrentPartner } from "@/lib/partners/current"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -27,6 +28,9 @@ export async function submitPartnerApplication(formData: FormData) {
   if (!companyName || !contactEmail) {
     redirect("/partner/register?error=missing")
   }
+  if (formData.get("accept_terms") !== "on") {
+    redirect("/partner/register?error=terms")
+  }
 
   const supabase = await createClient()
   const {
@@ -47,7 +51,13 @@ export async function submitPartnerApplication(formData: FormData) {
     listings_per_month: text(formData.get("listings_per_month")),
     feed_url: text(formData.get("feed_url")),
     feed_type: text(formData.get("feed_type")),
-    notes: text(formData.get("notes")),
+    // No dedicated column: the acceptance is kept with the application itself.
+    notes: [
+      text(formData.get("notes")),
+      `Accepted Terms and Privacy Policy (${TERMS_VERSION}) on ${new Date().toISOString()}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
   })
 
   if (error) {

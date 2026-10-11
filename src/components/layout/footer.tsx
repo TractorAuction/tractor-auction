@@ -70,7 +70,7 @@ export function Footer() {
               Privacy Policy
             </Link>
             <Link href="/terms" className="hover:text-white hover:underline">
-              Terms of Use
+              Terms and Conditions
             </Link>
           </div>
           <a href="mailto:partnerships@tractorauction.com" className="hover:text-white hover:underline">

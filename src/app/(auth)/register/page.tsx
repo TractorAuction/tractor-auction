@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 
 import { signUp } from "@/app/(auth)/actions"
+import { TermsCheckbox } from "@/components/account/terms-checkbox"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
@@ -85,6 +86,8 @@ export default async function RegisterPage(props: PageProps<"/register">) {
           />
           <span className="text-xs text-muted-foreground">At least 8 characters.</span>
         </label>
+
+        <TermsCheckbox />
 
         <Button type="submit" size="lg" className="mt-1">
           Create account

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
+import { TERMS_VERSION } from "@/content/legal/version"
 import { SITE_URL } from "@/lib/seo/slug"
 import { createClient } from "@/lib/supabase/server"
 
@@ -48,13 +49,27 @@ export async function signUp(formData: FormData) {
     redirect(`/register?error=${encodeURIComponent("Use at least 8 characters.")}`)
   }
 
+  if (formData.get("accept_terms") !== "on") {
+    redirect(
+      `/register?error=${encodeURIComponent("Please accept the Terms and Conditions and Privacy Policy.")}`
+    )
+  }
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     // full_name is read by the handle_new_user trigger into profiles.
-    options: { data: { full_name: fullName } },
+    // The acceptance record a clickwrap agreement rests on: when, and which
+    // version of the Terms (its "Last Updated" date).
+    options: {
+      data: {
+        full_name: fullName,
+        terms_accepted_at: new Date().toISOString(),
+        terms_version: TERMS_VERSION,
+      },
+    },
   })
 
   if (error) {

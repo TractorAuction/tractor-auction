@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
     // set is open ended. Narrow this to per-source hostnames once ingestion is live.
     remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
+  // The owner's Terms link to /privacy-policy; the pages live at /privacy and /terms.
+  async redirects() {
+    return [
+      { source: "/privacy-policy", destination: "/privacy", permanent: true },
+      { source: "/terms-and-conditions", destination: "/terms", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
