@@ -52,7 +52,20 @@ async function ingest(request: Request) {
     // Archiving reads whatever is expired/sold right now, so it runs after the
     // sweep above — a listing that just expired this tick is archived the
     // same tick rather than waiting for the next one.
-    const archived = dryRun ? 0 : (await archiveEndedListings()).archived
+    //
+    // It is secondary to ingestion: a failure here is reported in the response
+    // but does not turn a successful sync into a 500 (which also made the
+    // scheduler skip the link check that runs after it).
+    let archived = 0
+    let archiveError: string | null = null
+    if (!dryRun) {
+      try {
+        archived = (await archiveEndedListings()).archived
+      } catch (error) {
+        archiveError = error instanceof Error ? error.message : String(error)
+        console.error("[cron/ingest] archive failed:", archiveError)
+      }
+    }
 
     return NextResponse.json({
       data: {
@@ -60,6 +73,7 @@ async function ingest(request: Request) {
         sourcesRun: summaries.length,
         expired,
         archived,
+        archiveError,
         totals: summaries.reduce(
           (accumulator, summary) => ({
             seen: accumulator.seen + summary.itemsSeen,

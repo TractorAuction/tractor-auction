@@ -62,7 +62,9 @@ jobs:
           esac
 
       - name: Verify outbound links
-        if: ${{ !inputs.dry_run }}
+        # Runs even when the ingest step failed: dead links must still be
+        # caught on a tick where the sync had a problem.
+        if: ${{ !cancelled() && !inputs.dry_run }}
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
           SITE_URL: ${{ secrets.SITE_URL }}
