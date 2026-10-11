@@ -64,6 +64,9 @@ export async function signUp(formData: FormData) {
     // The acceptance record a clickwrap agreement rests on: when, and which
     // version of the Terms (its "Last Updated" date).
     options: {
+      // Without this, Supabase links the confirmation email to its Site URL
+      // setting instead of the page that finishes sign-in.
+      emailRedirectTo: `${SITE_URL}/callback`,
       data: {
         full_name: fullName,
         terms_accepted_at: new Date().toISOString(),
