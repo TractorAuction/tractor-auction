@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -5,9 +6,9 @@ import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { CompareBar } from "@/components/listing/compare-bar";
 import { CompareProvider } from "@/components/listing/compare-context";
+import { SITE_URL } from "@/lib/seo/slug";
 
 import "./globals.css";
-import { SITE_URL } from "@/lib/seo/slug"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <Footer />
           <CompareBar />
         </CompareProvider>
+        {/* Vercel Web Analytics: page views and visitors, cookieless. */}
+        <Analytics />
       </body>
     </html>
   );
