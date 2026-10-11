@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
   if (tokenHash && type && OTP_TYPES.includes(type)) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
-    if (error) return fail(`${error.message} Request a new link and try again.`)
+    if (error) return fail(`${error.message.replace(/\.?$/, ".")} Request a new link and try again.`)
     return NextResponse.redirect(new URL(next, request.url))
   }
 
