@@ -1,7 +1,7 @@
 # Partner CSV feed
 
 How an auction house without an API gets listings onto TractorAuction.com: one
-Google Sheet (or any CSV at a public URL), synced every hour by the
+Google Sheet (or any CSV at a public URL), synced on every ingest run (every 6 hours) by the
 **Partner Feed (CSV)** source.
 
 ## Columns
@@ -34,4 +34,4 @@ One row per lot. Header names must match exactly; extra columns are ignored.
    the same row; listings appear on the site straight after a successful run.
 
 Rows are removed from the site when their auction end date passes. Editing a
-row updates the listing on the next sync (hourly, or **Sync now**).
+row updates the listing on the next sync (every 6 hours, or **Sync now**).
