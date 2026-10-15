@@ -82,6 +82,7 @@ export async function runSavedSearchAlerts(): Promise<AlertRunResult> {
         to: email,
         subject: template.subject,
         text: template.text,
+        html: template.html,
       })
       if (sendError) {
         errors.push(`saved_search ${row.id}: ${sendError.message}`)
@@ -154,6 +155,7 @@ export async function runWatchlistEndingSoonAlerts(): Promise<AlertRunResult> {
         to: email,
         subject: template.subject,
         text: template.text,
+        html: template.html,
       })
       if (sendError) {
         errors.push(`watchlist_item ${row.id}: ${sendError.message}`)
