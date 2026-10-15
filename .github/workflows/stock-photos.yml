@@ -61,8 +61,6 @@ jobs:
               print(cat, len(picked))
           json.dump(manifest, open("stock-candidates/manifest.json", "w"), indent=2)
           PY
-          cd stock-candidates && for f in *.jpg; do convert "$f" -resize 400x "../thumb-$f" 2>/dev/null; done; cd ..
-          mkdir -p stock-candidates/thumbs && mv thumb-*.jpg stock-candidates/thumbs/ 2>/dev/null || true
       - name: Commit candidates
         run: |
           git config user.name "Gali"
