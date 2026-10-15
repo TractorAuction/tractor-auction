@@ -1,9 +1,12 @@
-import { setSourceStatus, upsertSource } from "@/app/admin/actions"
+import { setSourceStatus, syncSourceNow, upsertSource } from "@/app/admin/actions"
 import { Badge, DataTable } from "@/components/admin/data-table"
 import { Button } from "@/components/ui/button"
 import { getAdminSources } from "@/lib/admin/queries"
 import { formatDateTime } from "@/lib/format"
 import type { AuctionSource } from "@/types"
+
+// "Sync now" runs a feed inside this page's server action.
+export const maxDuration = 60
 
 const INTEGRATION_TYPES = [
   "api",
@@ -79,7 +82,9 @@ function SourceForm({ source }: { source?: AuctionSource }) {
         </select>
       </label>
       <label className="flex flex-col gap-1.5">
-        <span className="text-xs font-medium text-muted-foreground">Feed / API endpoint</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          Feed / API endpoint (for a Google Sheet: its published CSV link)
+        </span>
         <input name="api_endpoint" defaultValue={source?.api_endpoint} className={fieldClass} />
       </label>
       <label className="flex flex-col gap-1.5 sm:col-span-2">
@@ -117,6 +122,15 @@ function SourceForm({ source }: { source?: AuctionSource }) {
             className="size-4"
           />{" "}
           Sponsored
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            name="sync_enabled"
+            defaultChecked={source?.sync_enabled}
+            className="size-4"
+          />{" "}
+          Auto-sync feed
         </label>
       </div>
       <div className="sm:col-span-2">
@@ -235,6 +249,14 @@ export default async function AdminSourcesPage() {
                   {row.status === "active" ? "Deactivate" : "Activate"}
                 </Button>
               </form>
+                {row.sync_enabled && (
+                  <form action={syncSourceNow}>
+                    <input type="hidden" name="id" value={row.id} />
+                    <Button type="submit" size="xs" variant="outline">
+                      Sync now
+                    </Button>
+                  </form>
+                )}
                 <details className="text-left">
                   <summary className="cursor-pointer text-right text-xs text-primary hover:underline">
                     Edit

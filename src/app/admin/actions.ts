@@ -14,10 +14,12 @@ import {
   parseInteger,
   parseMoney,
 } from "@/lib/ingestion/normalize"
+import { runSource } from "@/lib/ingestion/run"
 import { mapListing } from "@/lib/listings/queries"
 import { patchListing, syncListings } from "@/lib/meilisearch/sync"
 import { createAdminClient } from "@/lib/supabase/admin"
 import type { ListingDocument } from "@/lib/meilisearch/client"
+import type { AuctionSource } from "@/types"
 
 /**
  * Every action re-checks admin access. A server action is a public endpoint —
@@ -210,6 +212,7 @@ export async function upsertSource(formData: FormData) {
     status: text(formData.get("status")) ?? "pending",
     is_featured: formData.get("is_featured") === "on",
     is_sponsored: formData.get("is_sponsored") === "on",
+    sync_enabled: formData.get("sync_enabled") === "on",
   }
 
   if (!payload.name || !payload.website_url) return
@@ -218,6 +221,31 @@ export async function upsertSource(formData: FormData) {
   else await supabase.from("auction_sources").insert(payload)
 
   revalidatePath("/admin/sources")
+}
+
+/**
+ * Runs one source's sync now instead of waiting for the next cron tick, so a
+ * newly connected feed (a partner's published sheet) can be checked at once.
+ * The result lands on the source row like any scheduled run.
+ */
+export async function syncSourceNow(formData: FormData) {
+  const supabase = await admin()
+  const id = text(formData.get("id"))
+  if (!id) return
+
+  const { data: source } = await supabase.from("auction_sources").select("*").eq("id", id).maybeSingle()
+  if (!source) return
+
+  try {
+    await runSource(source as unknown as AuctionSource, { trigger: "manual", budgetMs: 50_000 })
+  } catch (error) {
+    // runSource records its own failures on the row; this only catches a
+    // failure to reach the database at all.
+    console.error("[admin] syncSourceNow:", error instanceof Error ? error.message : error)
+  }
+
+  revalidatePath("/admin/sources")
+  revalidatePath("/")
 }
 
 export async function setSourceStatus(formData: FormData) {
