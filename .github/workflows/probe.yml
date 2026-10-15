@@ -1,0 +1,25 @@
+name: probe
+on:
+  push:
+    branches: [probe/gsa-photos]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Inspect gsaauctions.gov front end
+        run: |
+          set +e
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
+          mkdir w && cd w
+          curl -sSL -A "$UA" -o index.html -w "index %{http_code} %{url_effective}\n" https://www.gsaauctions.gov/
+          head -c 1500 index.html; echo
+          grep -oE '(src|href)="[^"]+\.js[^"]*"' index.html | head -30
+          for js in $(grep -oE 'src="[^"]+\.js[^"]*"' index.html | sed -E 's/src="([^"]+)"/\1/'); do
+            case "$js" in http*) u="$js";; /*) u="https://www.gsaauctions.gov$js";; *) u="https://www.gsaauctions.gov/$js";; esac
+            f=$(basename "${js%%\?*}"); curl -sSL -A "$UA" -o "$f" "$u"; echo "got $f $(wc -c < $f)"
+          done
+          echo "=== image refs"; grep -ohE '.{120}auction/image.{160}' *.js | head -20
+          echo "=== token refs"; grep -ohE '.{100}(anonymous|guest|public)[A-Za-z]*[Tt]oken.{120}' *.js | head -20
+          echo "=== gw api bases"; grep -ohE 'https?://[a-z.]*ppms\.gov[^"'"'"' ]*' *.js | sort -u | head -40
+          echo "=== Authorization header use"; grep -ohE '.{120}Authorization.{120}' *.js | head -15
