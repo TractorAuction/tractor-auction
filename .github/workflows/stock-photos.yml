@@ -1,0 +1,71 @@
+name: stock photo candidates
+on:
+  push:
+    branches: [stock-photos]
+    paths: [".github/workflows/stock-photos.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch freely licensed candidates from Wikimedia Commons
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.parse, urllib.request
+          UA = {"User-Agent": "TractorAuctionStockFetch/1.0 (https://www.tractorauction.com; partnerships@tractorauction.com)"}
+          OK = re.compile(r"^(public domain|pd|cc0|cc by(-sa)? \d)", re.I)
+          queries = {
+            "tractor": "farm tractor field",
+            "combine": "combine harvester harvesting",
+            "planter": "corn planter tractor",
+            "sprayer": "agricultural sprayer field",
+            "tillage": "disc harrow tractor tillage",
+            "hay-forage": "round baler hay",
+            "skid-steer": "skid steer loader",
+            "attachment": "tractor front loader bucket",
+            "construction": "excavator construction site",
+            "truck-trailer": "semi truck flatbed trailer",
+            "other": "farm equipment machinery",
+          }
+          os.makedirs("stock-candidates", exist_ok=True)
+          manifest = {}
+          for cat, q in queries.items():
+              params = {"action": "query", "format": "json", "generator": "search", "gsrnamespace": 6,
+                        "gsrsearch": f"{q} filetype:bitmap", "gsrlimit": 30, "prop": "imageinfo",
+                        "iiprop": "url|extmetadata|size", "iiurlwidth": 1200}
+              url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params)
+              data = json.load(urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=30))
+              pages = sorted(data.get("query", {}).get("pages", {}).values(), key=lambda p: p.get("index", 99))
+              picked = []
+              for p in pages:
+                  ii = (p.get("imageinfo") or [{}])[0]
+                  meta = ii.get("extmetadata", {})
+                  lic = meta.get("LicenseShortName", {}).get("value", "")
+                  if not OK.match(lic) or ii.get("width", 0) < 1000 or ii.get("width", 0) < ii.get("height", 1):
+                      continue
+                  n = len(picked) + 1
+                  fn = f"stock-candidates/{cat}-{n}.jpg"
+                  try:
+                      img = urllib.request.urlopen(urllib.request.Request(ii["thumburl"], headers=UA), timeout=30).read()
+                  except Exception as e:
+                      print("skip", p["title"], e); continue
+                  open(fn, "wb").write(img)
+                  artist = re.sub("<[^>]+>", "", meta.get("Artist", {}).get("value", "")).strip()
+                  picked.append({"file": fn, "title": p["title"], "page": ii.get("descriptionurl"),
+                                 "license": lic, "licenseUrl": meta.get("LicenseUrl", {}).get("value", ""), "artist": artist})
+                  if len(picked) >= 4: break
+              manifest[cat] = picked
+              print(cat, len(picked))
+          json.dump(manifest, open("stock-candidates/manifest.json", "w"), indent=2)
+          PY
+          cd stock-candidates && for f in *.jpg; do convert "$f" -resize 400x "../thumb-$f" 2>/dev/null; done; cd ..
+          mkdir -p stock-candidates/thumbs && mv thumb-*.jpg stock-candidates/thumbs/ 2>/dev/null || true
+      - name: Commit candidates
+        run: |
+          git config user.name "Gali"
+          git config user.email "claude@igolly.com"
+          git add stock-candidates
+          git commit -m "Stock photo candidates" && git push
