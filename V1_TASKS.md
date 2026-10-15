@@ -51,9 +51,9 @@ WHERE auction_end_date < NOW() AND status = 'active';
 
 ### 7. Missing Images
 - [x] Audit why images are not flowing through from source connectors
-- [ ] Fix image import in normalization layer for each active connector
-- [ ] Images array in listings table should never be empty if source has photos
-- [ ] Show first image on ListingCard, gallery on listing detail page
+- [x] Fix image import in normalization layer for each active connector
+- [ ] Images array in listings table should never be empty if source has photos (code done 2026-10-15: fallback to image_N columns, RSS enclosure/media, <img> in description; confirm on the first live sync)
+- [x] Show first image on ListingCard, gallery on listing detail page (dead hot-linked photos now fall back to the placeholder)
 - [x] If source has no images: show a clean equipment silhouette placeholder, NOT a broken image or "No Photo" text box
 - [x] Never show placeholder on featured or sponsored listings, flag for manual image add
 
@@ -211,7 +211,6 @@ Test these specifically on mobile:
 - [x] Featured and sponsored listing presentation should feel premium
 - [x] Overall feel: credible national platform, not a dev build
 
----
 
 ## PRIORITY 5 — FINAL QA REPORT
 

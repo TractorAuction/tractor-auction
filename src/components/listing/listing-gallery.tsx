@@ -14,11 +14,18 @@ type ListingGalleryProps = {
   title: string
 }
 
-export function ListingGallery({ images, title, category }: ListingGalleryProps) {
-  const [active, setActive] = useState(0)
+export function ListingGallery({ images: sourceImages, title, category }: ListingGalleryProps) {
+  const [activeIndex, setActive] = useState(0)
+  // Photos are hot-linked, so one can 404 or be blocked after ingest. A dead
+  // photo is dropped from the gallery instead of showing as a broken image.
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set())
+  const images = sourceImages.filter((image) => !failed.has(image))
+  const active = Math.min(activeIndex, Math.max(0, images.length - 1))
+  const markFailed = (image: string) =>
+    setFailed((current) => new Set(current).add(image))
 
   const step = (delta: number) => {
-    setActive((current) => (current + delta + images.length) % images.length)
+    setActive((active + delta + images.length) % images.length)
   }
 
   // No photo count, no arrows, no thumbnail strip when the source feed carried
@@ -44,6 +51,7 @@ export function ListingGallery({ images, title, category }: ListingGalleryProps)
           priority
           sizes="(min-width: 1024px) 640px, 100vw"
           className="object-cover"
+          onError={() => markFailed(images[active])}
         />
 
         {images.length > 1 && (
@@ -65,7 +73,7 @@ export function ListingGallery({ images, title, category }: ListingGalleryProps)
         <div className="grid grid-cols-5 gap-2">
           {images.map((image, index) => (
             <button
-              key={index}
+              key={image}
               type="button"
               onClick={() => setActive(index)}
               aria-label={`Show photo ${index + 1}`}
@@ -77,7 +85,14 @@ export function ListingGallery({ images, title, category }: ListingGalleryProps)
                   : "border-border hover:border-primary/50"
               )}
             >
-              <Image src={image} alt="" fill sizes="128px" className="object-cover" />
+              <Image
+                src={image}
+                alt=""
+                fill
+                sizes="128px"
+                className="object-cover"
+                onError={() => markFailed(image)}
+              />
             </button>
           ))}
         </div>

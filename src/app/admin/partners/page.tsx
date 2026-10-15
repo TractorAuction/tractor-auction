@@ -211,6 +211,9 @@ export default async function AdminPartnersPage(props: PageProps<"/admin/partner
                     submission.auction_end_date
                       ? `ends ${formatDate(submission.auction_end_date as string)}`
                       : null,
+                    Array.isArray(submission.images) && submission.images.length > 0
+                      ? `${submission.images.length} photo${submission.images.length === 1 ? "" : "s"}`
+                      : "no photos",
                   ]
                     .filter(Boolean)
                     .join(" · ")}

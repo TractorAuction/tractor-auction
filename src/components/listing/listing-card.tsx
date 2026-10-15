@@ -1,5 +1,4 @@
 import { Clock, MapPin } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 
 import { formatCurrency, formatLocation, formatRelativeTime, formatTimeLeft } from "@/lib/format"
@@ -8,6 +7,7 @@ import type { Listing } from "@/types"
 
 import { CompareToggle } from "./compare-toggle"
 import { ListingImagePlaceholder } from "./listing-image-placeholder"
+import { ListingPhoto } from "./listing-photo"
 
 export function ListingCard({ listing }: { listing: Listing }) {
   const location = formatLocation(listing.location_city, listing.location_state)
@@ -70,9 +70,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
             neutral silhouette rather than borrowing a stock tractor, which
             would misrepresent the machine someone is about to bid on. */}
         {cover ? (
-          <Image
+          <ListingPhoto
             src={cover}
             alt={title}
+            category={listing.equipment_category}
             fill
             sizes="(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition-transform group-hover:scale-105"

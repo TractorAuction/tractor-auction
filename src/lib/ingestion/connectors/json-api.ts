@@ -1,5 +1,5 @@
 import { fetchFeed } from "../fetch"
-import { readPath } from "../normalize"
+import { objectImageUrl, readPath } from "../normalize"
 import type { Connector, ConnectorContext, RawItem } from "../types"
 
 /**
@@ -92,22 +92,15 @@ function flatten(input: Record<string, unknown>, prefix = "", depth = 0): RawIte
     if (value === null || value === undefined) continue
 
     if (Array.isArray(value)) {
-      // Arrays of scalars join (images, tags); arrays of objects also expose
-      // their first entry's fields, which is how most feeds nest a photo list.
+      // Arrays of scalars join (images, tags); arrays of objects contribute the
+      // address each one carries, which is how most feeds nest a photo list
+      // ([{ url }], [{ src }], [{ sizes: { large } }]).
       const scalars = value.filter((item) => typeof item !== "object" || item === null)
       if (scalars.length === value.length) {
         output[path] = value.map(String).join(",")
       } else {
         output[path] = value
-          .map((item) =>
-            item && typeof item === "object"
-              ? String(
-                  (item as Record<string, unknown>).url ??
-                    (item as Record<string, unknown>).src ??
-                    ""
-                )
-              : String(item)
-          )
+          .map((item) => (item && typeof item === "object" ? objectImageUrl(item) ?? "" : String(item)))
           .filter(Boolean)
           .join(",")
       }

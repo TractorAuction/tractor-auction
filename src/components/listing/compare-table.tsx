@@ -1,7 +1,6 @@
 "use client"
 
 import { Check, Share2, X } from "lucide-react"
-import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -12,6 +11,7 @@ import { slugify } from "@/lib/seo/slug"
 import type { Listing } from "@/types"
 
 import { ListingImagePlaceholder } from "./listing-image-placeholder"
+import { ListingPhoto } from "./listing-photo"
 
 /** One row per attribute, each listing's value read off the same field. */
 const ROWS: Array<{ label: string; value: (listing: Listing) => React.ReactNode }> = [
@@ -86,7 +86,15 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
                   <div className="flex flex-col gap-2">
                     <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md bg-muted">
                       {cover ? (
-                        <Image src={cover} alt={title} fill sizes="200px" className="object-cover" />
+                        <ListingPhoto
+                          src={cover}
+                          alt={title}
+                          category={listing.equipment_category}
+                          iconClassName="size-8"
+                          fill
+                          sizes="200px"
+                          className="object-cover"
+                        />
                       ) : (
                         <ListingImagePlaceholder category={listing.equipment_category} iconClassName="size-8" />
                       )}

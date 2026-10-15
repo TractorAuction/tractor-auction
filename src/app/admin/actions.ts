@@ -171,23 +171,16 @@ export async function toggleListingFlag(formData: FormData) {
 /**
  * Manual photos for a listing whose source publishes none — the fix for a
  * featured or sponsored placement that would otherwise show the placeholder.
- * Only absolute https URLs are kept (next/image will not load anything else).
+ * Only absolute URLs are kept, as https (next/image will not load anything else).
  */
 export async function setListingImages(formData: FormData) {
   const supabase = await admin()
   const id = text(formData.get("id"))
   if (!id) return
 
-  const images = String(formData.get("images") ?? "")
-    .split(/[\s,]+/)
-    .map((url) => url.trim())
-    .filter((url) => {
-      try {
-        return new URL(url).protocol === "https:"
-      } catch {
-        return false
-      }
-    })
+  // Same rules as ingested photos: http upgraded to https, Drive/Dropbox share
+  // links rewritten to the file, placeholders and non-photos dropped.
+  const images = parseImages(String(formData.get("images") ?? ""))
 
   await supabase
     .from("listings")
@@ -394,6 +387,7 @@ export async function approvePartnerSubmission(formData: FormData) {
         current_bid: record.current_bid,
         description: record.description,
         original_url: record.original_url,
+        images: Array.isArray(record.images) ? record.images : [],
         status: endDate && new Date(endDate).getTime() < Date.now() ? "expired" : "active",
         last_synced_at: now,
         updated_at: now,

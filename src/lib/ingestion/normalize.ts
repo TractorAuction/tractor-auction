@@ -320,37 +320,170 @@ export function inferFromTitle(title: string | undefined): {
  * Images must be absolute https URLs: they are rendered through next/image,
  * whose remotePatterns only permit https hosts, and a relative path from a feed
  * would resolve against tractorauction.com and 404.
+ *
+ * `strict` is for values found by guessing at a column name rather than through
+ * the field map: there only absolute URLs count, so a `has_photos = "true"`
+ * column cannot turn into https://source.example/true.
  */
-export function parseImages(value: string | undefined, baseUrl?: string): string[] {
+export function parseImages(
+  value: string | undefined,
+  baseUrl?: string,
+  { strict = false }: { strict?: boolean } = {}
+): string[] {
   const raw = text(value)
   if (!raw) return []
-
-  const candidates = raw.startsWith("[")
-    ? safeJsonArray(raw)
-    : raw.split(/[|,\s]+/).filter(Boolean)
 
   const seen = new Set<string>()
   const images: string[] = []
 
-  for (const candidate of candidates) {
-    const absolute = absoluteUrl(candidate, baseUrl)
+  for (const candidate of splitImageList(raw)) {
+    if (strict && !/^(?:https?:)?\/\//i.test(candidate)) continue
+    const absolute = imageUrl(candidate, baseUrl)
     if (!absolute || seen.has(absolute)) continue
     seen.add(absolute)
     images.push(absolute)
-    if (images.length >= 24) break
+    if (images.length >= MAX_IMAGES) break
   }
 
   return images
+}
+
+const MAX_IMAGES = 24
+
+function splitImageList(raw: string): string[] {
+  if (raw.startsWith("[")) return safeJsonArray(raw)
+  // Image CDNs put commas inside the URL itself (Cloudinary's /w_800,h_600/,
+  // imgix-style params), so a list of absolute URLs is split only where the
+  // next URL begins. Relative paths have no such marker and split on any
+  // separator, as before.
+  if (/^(?:https?:)?\/\//i.test(raw)) {
+    return raw
+      .split(/[\s|,;]+(?=(?:https?:)?\/\/)/i)
+      .map((part) => part.replace(/[\s|,;]+$/, ""))
+      .filter(Boolean)
+  }
+  return raw.split(/[|,\s]+/).filter(Boolean)
 }
 
 function safeJsonArray(raw: string): string[] {
   try {
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
-    return parsed.filter((item): item is string => typeof item === "string")
+    return parsed
+      .map((item) => (typeof item === "string" ? item : objectImageUrl(item)))
+      .filter((item): item is string => Boolean(item))
   } catch {
     return []
   }
+}
+
+/** Keys a feed uses for the address inside a photo object, best size first. */
+export const IMAGE_OBJECT_KEYS = [
+  "url", "src", "href", "uri", "link", "original", "full", "large", "image", "image_url",
+  "imageUrl", "photo_url", "photoUrl", "@_url", "@_href", "@_src", "#text", "sizes", "variants",
+]
+
+export function objectImageUrl(item: unknown): string | undefined {
+  if (!item || typeof item !== "object") return undefined
+  const record = item as Record<string, unknown>
+  for (const key of IMAGE_OBJECT_KEYS) {
+    const value = record[key]
+    if (typeof value === "string" && value.trim()) return value.trim()
+    // { sizes: { large: "..." } } and { url: { full: "..." } } one level down.
+    if (value && typeof value === "object") {
+      const nested = objectImageUrl(value)
+      if (nested) return nested
+    }
+  }
+  return undefined
+}
+
+// A source's own "no photo" graphic is not a photo of the machine, and showing
+// it is exactly the "No Photo" box the silhouette placeholder replaces.
+const PLACEHOLDER_IMAGE =
+  /(?:no[-_ ]?(?:image|photo|pic|picture)s?|(?:image|photo)[-_ ]?(?:not[-_ ]?available|unavailable|coming[-_ ]?soon|missing)|placeholder|coming[-_ ]?soon|default[-_ ]?(?:image|photo|thumb)|spacer|blank|1x1|pixel)\.(?:png|jpe?g|gif|webp|svg)$/i
+// next/image refuses SVG without dangerouslyAllowSVG (and an SVG from a feed
+// is a logo, not equipment); documents and video are not photos at all.
+const NOT_A_PHOTO = /\.(?:svg|pdf|docx?|xlsx?|zip|mp3|mp4|mov|avi|webm|m3u8)$/i
+
+/**
+ * absoluteUrl, plus the image-specific clean-up: drop placeholders and
+ * non-photos, and rewrite share links small auction houses paste into a sheet
+ * (Google Drive, Dropbox) to the direct file, since the share page is HTML.
+ */
+function imageUrl(candidate: string, baseUrl?: string): string | undefined {
+  const absolute = absoluteUrl(candidate.startsWith("//") ? `https:${candidate}` : candidate, baseUrl)
+  if (!absolute) return undefined
+
+  const url = new URL(absolute)
+  if (PLACEHOLDER_IMAGE.test(url.pathname) || NOT_A_PHOTO.test(url.pathname)) return undefined
+
+  if (url.hostname === "drive.google.com") {
+    const id = url.pathname.match(/\/file\/d\/([\w-]+)/)?.[1] ?? url.searchParams.get("id")
+    return id ? `https://lh3.googleusercontent.com/d/${id}` : undefined
+  }
+  if (url.hostname === "www.dropbox.com" || url.hostname === "dropbox.com") {
+    url.searchParams.delete("dl")
+    url.searchParams.set("raw", "1")
+    return url.toString()
+  }
+
+  return absolute
+}
+
+/** <img src> (and lazy-load data-src) addresses inside an HTML description. */
+export function imagesFromHtml(html: string | undefined, baseUrl?: string): string[] {
+  if (!html || !/<img\b/i.test(html)) return []
+  const sources: string[] = []
+  for (const tag of html.match(/<img\b[^>]*>/gi) ?? []) {
+    const src =
+      tag.match(/\bdata-src\s*=\s*["']([^"']+)["']/i)?.[1] ??
+      tag.match(/\bsrc\s*=\s*["']([^"']+)["']/i)?.[1]
+    if (src && !src.startsWith("data:")) sources.push(src.replace(/&amp;/g, "&"))
+  }
+  return parseImages(JSON.stringify(sources), baseUrl)
+}
+
+/**
+ * Raw keys that carry photos in feeds whose field map does not name one, such
+ * as a partner sheet with image_1..image_8 columns or an RSS <enclosure> /
+ * <media:content>. Matched on the whole key, so "image_count" is not a photo.
+ */
+const IMAGE_KEY =
+  /(?:^|[._:-])(?:images?|photos?|pictures?|pics?|gallery|thumbnails?|enclosure|media:content|media:thumbnail)(?:[._ -]?(?:\d+|urls?|links?|src|href|large|full|original|image|@_url|@_href|#text))*$/i
+
+export function guessImages(item: RawItem, baseUrl?: string): string[] {
+  const values = Object.entries(item)
+    .filter(([key]) => IMAGE_KEY.test(key))
+    // image_1 before image_10: the first photo is the cover.
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
+    .map(([, value]) => value)
+    .filter((value): value is string => Boolean(value))
+  return parseImages(values.join(","), baseUrl, { strict: true })
+}
+
+/**
+ * Feeds (RSS especially) send descriptions as HTML. Listing pages render the
+ * description as text, so tags would show as literal markup.
+ */
+export function plainText(value: string | undefined): string | undefined {
+  const raw = text(value)
+  if (!raw || !/<[a-z/!][^>]*>/i.test(raw)) return raw
+  return text(
+    raw
+      .replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, "")
+      .replace(/<br\s*\/?>|<\/(?:p|div|li|tr|h[1-6])>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;|&apos;/g, "'")
+      .replace(/[ \t]+/g, " ")
+      .replace(/\s*\n\s*/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+  )
 }
 
 export function absoluteUrl(value: string | undefined, baseUrl?: string): string | undefined {
@@ -367,7 +500,7 @@ export function absoluteUrl(value: string | undefined, baseUrl?: string): string
   }
 }
 
-const DEFAULT_FIELD_MAP: Record<string, string> = {
+const DEFAULT_FIELD_MAP: Record<string, string | string[]> = {
   external_id: "external_id",
   title: "title",
   equipment_category: "equipment_category",
@@ -452,11 +585,15 @@ export function normalizeItem(
   const map = { ...DEFAULT_FIELD_MAP, ...(config.fieldMap ?? {}) }
   const statics = config.staticFields ?? {}
 
+  // A column may be mapped to several raw keys (a sheet with image_1..image_8);
+  // their values are joined, which is what the images list wants.
   const field = (column: string): string | undefined => {
     const staticValue = statics[column]
     if (staticValue !== undefined) return String(staticValue)
     const key = map[column]
-    return key ? text(item[key]) : undefined
+    if (!key) return undefined
+    if (Array.isArray(key)) return text(key.map((part) => text(item[part])).filter(Boolean).join(","))
+    return text(item[key])
   }
 
   const externalId = field("external_id")
@@ -475,7 +612,8 @@ export function normalizeItem(
   const inferred = inferFromTitle(title)
   const make = canonicalMake(field("make")) ?? inferred.make
   const model = field("model") ?? inferred.model
-  const description = field("description")
+  const rawDescription = field("description")
+  const description = plainText(rawDescription)
 
   // Parsed before the title so a rejected year cannot leak into it: a row whose
   // year fails validation must not end up titled "9999 John Deere 6155R".
@@ -488,6 +626,17 @@ export function normalizeItem(
   // send a ZIP, which resolves offline against the bundled Census centroids.
   const zip = field("location_zip")
   const point = geocodeZip(zip)
+
+  // The mapped field first; if it is empty or unmapped, photos the feed still
+  // carries elsewhere (an image_2 column, an RSS enclosure, an <img> in the
+  // description) are used rather than leaving a listing with photos blank.
+  const listingImages = (): string[] => {
+    const mapped = parseImages(field("images"), baseUrl)
+    if (mapped.length > 0) return mapped
+    const guessed = guessImages(item, baseUrl)
+    if (guessed.length > 0) return guessed
+    return imagesFromHtml(rawDescription, baseUrl)
+  }
 
   return {
     listing: {
@@ -515,7 +664,7 @@ export function normalizeItem(
       current_bid: parseMoney(field("current_bid")),
       buy_it_now_price: parseMoney(field("buy_it_now_price")),
       description,
-      images: parseImages(field("images"), baseUrl),
+      images: listingImages(),
       original_url: originalUrl,
       // A feed that is still listing an item whose auction has passed is treated
       // as expired here; the expiry sweep catches rows that drop out entirely.

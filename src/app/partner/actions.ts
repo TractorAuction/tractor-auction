@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 
 import { revalidatePath } from "next/cache"
 
-import { canonicalCategory, canonicalMake, canonicalState } from "@/lib/ingestion/normalize"
+import { canonicalCategory, canonicalMake, canonicalState, parseImages } from "@/lib/ingestion/normalize"
 import { TERMS_VERSION } from "@/content/legal/version"
 import { getCurrentPartner } from "@/lib/partners/current"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -133,6 +133,7 @@ export async function submitPartnerListing(formData: FormData) {
       current_bid: bid !== null && Number.isFinite(bid) ? bid : null,
       description: description?.slice(0, 5000) ?? null,
       original_url: originalUrl,
+      images: parseImages(text(formData.get("images")) ?? undefined),
     })
 
   if (error) {

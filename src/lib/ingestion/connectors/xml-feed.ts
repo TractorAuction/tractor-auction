@@ -1,7 +1,7 @@
 import { XMLParser } from "fast-xml-parser"
 
 import { fetchFeed } from "../fetch"
-import { readPath } from "../normalize"
+import { objectImageUrl, readPath } from "../normalize"
 import type { Connector, ConnectorContext, RawItem } from "../types"
 
 /**
@@ -113,13 +113,12 @@ function flattenNode(node: Record<string, unknown>, prefix = "", depth = 0): Raw
       if (scalars.length === value.length) {
         output[path] = value.map(String).join(",")
       } else {
-        // Repeated <image> elements: collect their text or url attribute.
+        // Repeated <image> / <media:content> elements: collect their url
+        // attribute or text.
         output[path] = value
-          .map((item) => {
-            if (!item || typeof item !== "object") return String(item ?? "")
-            const record = item as Record<string, unknown>
-            return String(record["#text"] ?? record["@_url"] ?? record["@_href"] ?? "")
-          })
+          .map((item) =>
+            item && typeof item === "object" ? objectImageUrl(item) ?? "" : String(item ?? "")
+          )
           .filter(Boolean)
           .join(",")
       }

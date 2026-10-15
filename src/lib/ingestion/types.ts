@@ -61,7 +61,8 @@ export type FeedConfig = {
   url?: string
   /** Dotted path to the array of items inside a JSON envelope, e.g. "data.results". */
   itemsPath?: string
-  fieldMap?: Record<string, string>
+  /** A column may name several raw keys; their values are joined (used for images). */
+  fieldMap?: Record<string, string | string[]>
   /** Values forced onto every item from this feed, e.g. auction_company. */
   staticFields?: Record<string, string | number>
   /** Name of the env var holding the feed's bearer token or API key. */

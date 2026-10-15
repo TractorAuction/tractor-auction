@@ -289,6 +289,16 @@ export default async function PartnerDashboardPage(props: PageProps<"/partner/da
               </Field>
             </div>
             <div className="sm:col-span-2">
+              <Field label="Photo URLs (one per line, first is the cover)">
+                <textarea
+                  name="images"
+                  rows={3}
+                  placeholder="https://www.yourauction.com/photos/lot-12-1.jpg"
+                  className="w-full rounded-lg border border-border bg-background px-2.5 py-2 text-sm outline-none focus-visible:border-ring"
+                />
+              </Field>
+            </div>
+            <div className="sm:col-span-2">
               <Button type="submit">Submit for review</Button>
             </div>
           </form>
