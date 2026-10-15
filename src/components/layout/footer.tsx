@@ -17,6 +17,7 @@ const columns: { heading: string; links: { href: string; label: string }[] }[] =
       { href: "/about", label: "About" },
       { href: "/resources", label: "Resources" },
       { href: "/partner", label: "List your auctions" },
+      { href: "/contact", label: "Contact us" },
     ],
   },
 ]
@@ -29,7 +30,7 @@ export function Footer() {
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex w-fit items-center gap-2">
               <Image
-                src="/logo-no-bg.png"
+                src="/logo-white.png"
                 alt="TractorAuction.com"
                 width={471}
                 height={236}

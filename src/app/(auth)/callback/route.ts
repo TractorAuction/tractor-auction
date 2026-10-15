@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
 
+import { linkErrorMessage } from "@/lib/auth/link-error"
 import { createClient } from "@/lib/supabase/server"
 
 const OTP_TYPES: EmailOtpType[] = ["signup", "invite", "magiclink", "recovery", "email_change", "email"]
@@ -48,5 +49,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(next, request.url))
   }
 
-  return fail("That link is missing its confirmation code.")
+  // Supabase reports a failed link (expired, already used, or opened by an
+  // email scanner before the person clicked it) by sending them here with
+  // error parameters instead of a code.
+  const errorCode = params.get("error_code")
+  const errorDescription = params.get("error_description")
+  if (errorCode || errorDescription || params.get("error")) {
+    return fail(linkErrorMessage(errorCode, errorDescription))
+  }
+
+  // Nothing in the query string: the tokens or the error may be in the URL
+  // fragment (#access_token=… or #error=…), which never reaches the server.
+  // Browsers keep the fragment across a redirect, so the page there can read it.
+  const complete = new URL("/callback/complete", request.url)
+  complete.searchParams.set("next", next)
+  return NextResponse.redirect(complete)
 }

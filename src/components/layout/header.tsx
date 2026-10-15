@@ -15,7 +15,7 @@ export function Header() {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center" aria-label="TractorAuction.com home">
           <Image
-            src="/logo-no-bg.png"
+            src="/logo-white.png"
             alt="TractorAuction.com"
             width={471}
             height={236}

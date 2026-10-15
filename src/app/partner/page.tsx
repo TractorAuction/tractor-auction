@@ -141,7 +141,7 @@ export default function PartnerLandingPage() {
             Ready to reach more bidders?
           </h2>
           <p className="text-muted-foreground">
-            Applications are reviewed within two business days.
+            Applications are reviewed within 5 business days.
           </p>
           <Button size="lg" nativeButton={false} render={<Link href="/partner/register" />}>
             Apply now <ArrowRight className="size-4" />

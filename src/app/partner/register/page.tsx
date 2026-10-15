@@ -58,8 +58,9 @@ export default async function PartnerRegisterPage(props: PageProps<"/partner/reg
         <CheckCircle2 className="size-10 text-primary" />
         <h1 className="text-2xl font-semibold text-foreground">Application received</h1>
         <p className="text-muted-foreground">
-          Thanks — we will review your listings and get back to you within two business days
-          at the address you gave us.
+          Thanks — we will review your application and get back to you within 5 business days
+          at the address you gave us. If we are unable to verify the validity of the
+          application, it will be rejected.
         </p>
         <Button variant="outline" nativeButton={false} render={<Link href="/" />}>
           Back to TractorAuction.com

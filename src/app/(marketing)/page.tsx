@@ -103,17 +103,18 @@ export default async function Home() {
 
         <div className="relative mx-auto flex max-w-6xl flex-col gap-6">
           <h1 className="max-w-xl text-4xl font-bold leading-tight drop-shadow-md sm:text-5xl">
-            Find Tractors. <br /> Win More.
+            More Tractors. More Auctions. <br /> One Search.
           </h1>
           <p className="max-w-md text-base text-white/90 drop-shadow-sm">
-            Search active and recent tractor auctions from multiple auction sites in one
-            place.
+            Search active tractor auctions from multiple auction sites in one place.
           </p>
           <HeroSearch makes={facets.makes} states={facets.states} />
         </div>
       </section>
 
-      {liveSources.length > 0 && (
+      {/* Hidden until more than one source is live: a strip naming a single
+          source undersells the aggregation. */}
+      {liveSources.length > 1 && (
         <section className="border-b border-border bg-muted/40 px-6 py-8">
           <div className="mx-auto flex max-w-6xl flex-col items-center gap-5">
             <p className="text-sm font-medium text-muted-foreground">
