@@ -73,6 +73,9 @@ export function Footer() {
             <Link href="/terms" className="hover:text-white hover:underline">
               Terms and Conditions
             </Link>
+            <Link href="/photo-credits" className="hover:text-white hover:underline">
+              Photo credits
+            </Link>
           </div>
           <a href="mailto:partnerships@tractorauction.com" className="hover:text-white hover:underline">
             partnerships@tractorauction.com

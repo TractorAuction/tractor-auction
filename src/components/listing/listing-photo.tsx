@@ -8,17 +8,17 @@ import { ListingImagePlaceholder } from "./listing-image-placeholder"
 /**
  * A hot-linked source photo. Auction sites move, expire or block their images,
  * and a dead one would otherwise render as a broken-image box; this falls back
- * to the same silhouette shown when a feed carries no photo at all.
+ * to the same representative stock photo shown when a feed carries none.
  */
 export function ListingPhoto({
   category,
-  iconClassName,
+  compact,
   ...props
-}: ImageProps & { category?: string; iconClassName?: string }) {
+}: ImageProps & { category?: string; compact?: boolean }) {
   const [failedSrc, setFailedSrc] = useState<ImageProps["src"] | null>(null)
 
   if (failedSrc === props.src) {
-    return <ListingImagePlaceholder category={category} iconClassName={iconClassName} />
+    return <ListingImagePlaceholder category={category} sizes={props.sizes} compact={compact} />
   }
 
   // eslint-disable-next-line jsx-a11y/alt-text -- alt is passed through in props

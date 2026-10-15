@@ -6,6 +6,7 @@ import Image from "next/image"
 import { ListingImagePlaceholder } from "./listing-image-placeholder"
 import { useState } from "react"
 
+import { STOCK_PHOTO_LABEL, stockPhotoFor } from "@/lib/listings/stock-photos"
 import { cn } from "@/lib/utils"
 
 type ListingGalleryProps = {
@@ -28,14 +29,23 @@ export function ListingGallery({ images: sourceImages, title, category }: Listin
     setActive((active + delta + images.length) % images.length)
   }
 
-  // No photo count, no arrows, no thumbnail strip when the source feed carried
-  // no images — an empty gallery should not imply photos exist to be clicked.
+  // No photo count, arrows or thumbnails when the source sent no photos: the
+  // stock photo stands in, labelled, with its credit and a pointer to the
+  // auction company's own photos.
   if (images.length === 0) {
+    const stock = stockPhotoFor(category)
     return (
-      <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border">
-        <ListingImagePlaceholder category={category} iconClassName="size-24" />
-        <p className="absolute inset-x-0 bottom-3 text-center text-xs text-muted-foreground">
-          Photos are on the auction company&apos;s listing.
+      <div className="flex flex-col gap-2">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-xl border border-border bg-muted">
+          <ListingImagePlaceholder category={category} sizes="(min-width: 1024px) 640px, 100vw" />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {STOCK_PHOTO_LABEL}, not the item for sale. Photos of this item are on the auction
+          company&apos;s listing. Stock photo:{" "}
+          <a href={stock.sourceUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+            {stock.author}
+          </a>
+          , {stock.license}.
         </p>
       </div>
     )

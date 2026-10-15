@@ -37,15 +37,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
             : "border-border"
       )}
     >
-      {/* Without a photo there is nothing to look at, so on single-column
-          phones the placeholder is short; from sm up every card is 4:3 so the
-          grid rows stay even. */}
-      <div
-        className={cn(
-          "relative overflow-hidden bg-muted",
-          cover ? "aspect-[4/3]" : "aspect-[5/2] sm:aspect-[4/3]"
-        )}
-      >
+      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
         {/* Paid placement is labelled before anything else on the card, and the
             label says "Sponsored" in plain words — never a colour or icon alone. */}
         <div className="absolute left-2 top-2 z-10 flex gap-1">
@@ -66,9 +58,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
           className="absolute right-2 top-2 z-10"
         />
 
-        {/* Only ever the source's own photo. A listing with no photo shows a
-            neutral silhouette rather than borrowing a stock tractor, which
-            would misrepresent the machine someone is about to bid on. */}
+        {/* The source's own photo when there is one; otherwise a stock photo
+            of the same kind of equipment, labelled as representative. */}
         {cover ? (
           <ListingPhoto
             src={cover}

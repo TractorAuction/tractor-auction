@@ -1,33 +1,39 @@
-import { Tractor, Truck } from "lucide-react"
+import Image from "next/image"
 
+import { STOCK_PHOTO_LABEL, stockPhotoFor } from "@/lib/listings/stock-photos"
 import { cn } from "@/lib/utils"
 
 /**
- * Shown when the source feed carried no photo. A neutral equipment silhouette,
- * never a stock photo of a tractor: borrowing someone else's machine would
- * misrepresent the one being bid on.
+ * Shown when the source feed carried no usable photo: a stock photo of the
+ * same kind of equipment, always labelled as representative so it is never
+ * mistaken for the machine being sold. Credits are on /photo-credits and under
+ * the gallery on the listing page.
  */
 export function ListingImagePlaceholder({
   category,
   className,
-  iconClassName,
+  sizes = "(min-width: 1024px) 320px, (min-width: 640px) 50vw, 100vw",
+  compact = false,
 }: {
-  /** Picks the silhouette, so a truck listing does not show a tractor. */
+  /** Picks the photo, so a truck listing does not show a tractor. */
   category?: string
   className?: string
-  iconClassName?: string
+  sizes?: string
+  /** Smaller label for thumbnails such as the compare table. */
+  compact?: boolean
 }) {
-  const Icon = category === "truck-trailer" ? Truck : Tractor
+  const photo = stockPhotoFor(category)
   return (
-    <div
-      role="img"
-      aria-label="Photo not provided by the auction source"
-      className={cn(
-        "flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted/40 text-muted-foreground/30",
-        className
-      )}
-    >
-      <Icon className={cn("size-12", iconClassName)} strokeWidth={1} />
+    <div className={cn("relative h-full w-full", className)}>
+      <Image src={photo.src} alt={`${STOCK_PHOTO_LABEL} of similar equipment`} fill sizes={sizes} className="object-cover" />
+      <span
+        className={cn(
+          "absolute bottom-2 left-2 rounded bg-foreground/70 font-medium text-background backdrop-blur-sm",
+          compact ? "px-1 py-0.5 text-[10px]" : "px-1.5 py-0.5 text-[11px]"
+        )}
+      >
+        {STOCK_PHOTO_LABEL}
+      </span>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from "@/lib/format"
+import { STOCK_PHOTO_LABEL, stockPhotoFor } from "@/lib/listings/stock-photos"
 import { SITE_URL } from "@/lib/seo/slug"
 import type { Listing } from "@/types"
 
@@ -43,7 +44,7 @@ function listingCardHtml(listing: Listing): string {
 
   const photo = image
     ? `<img src="${escapeHtml(image)}" width="120" height="90" alt="" style="display:block;width:120px;height:90px;object-fit:cover;border-radius:6px;border:0">`
-    : `<div style="width:120px;height:90px;border-radius:6px;background:#e7ebe5;color:#4a6741;font-size:12px;line-height:90px;text-align:center">No photo</div>`
+    : `<img src="${escapeHtml(`${SITE_URL}${stockPhotoFor(listing.equipment_category).src}`)}" width="120" height="90" alt="${STOCK_PHOTO_LABEL}" style="display:block;width:120px;height:90px;object-fit:cover;border-radius:6px;border:0"><div style="margin-top:3px;color:#6b7280;font-size:11px">${STOCK_PHOTO_LABEL}</div>`
 
   return `<tr><td style="padding:12px 0;border-bottom:1px solid #e5e7eb">
 <table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr>

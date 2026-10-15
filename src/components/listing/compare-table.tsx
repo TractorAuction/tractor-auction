@@ -90,13 +90,13 @@ export function CompareTable({ listings }: { listings: Listing[] }) {
                           src={cover}
                           alt={title}
                           category={listing.equipment_category}
-                          iconClassName="size-8"
+                          compact
                           fill
                           sizes="200px"
                           className="object-cover"
                         />
                       ) : (
-                        <ListingImagePlaceholder category={listing.equipment_category} iconClassName="size-8" />
+                        <ListingImagePlaceholder category={listing.equipment_category} sizes="200px" compact />
                       )}
                       <button
                         type="button"
