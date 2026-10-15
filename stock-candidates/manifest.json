@@ -1,0 +1,376 @@
+{
+  "tractor": [
+    {
+      "file": "stock-candidates/tractor-1.jpg",
+      "title": "File:Field-Marshall tractor, Cophill Farm vintage rally 2012.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Field-Marshall_tractor,_Cophill_Farm_vintage_rally_2012.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Andy Dingley"
+    },
+    {
+      "file": "stock-candidates/tractor-2.jpg",
+      "title": "File:Flywheel and decompressor, Field-Marshall tractor, Cophill Farm vintage rally 2012.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Flywheel_and_decompressor,_Field-Marshall_tractor,_Cophill_Farm_vintage_rally_2012.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Andy Dingley"
+    },
+    {
+      "file": "stock-candidates/tractor-3.jpg",
+      "title": "File:Starting cartridge breech, Field-Marshall tractor, Cophill Farm vintage rally 2012.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Starting_cartridge_breech,_Field-Marshall_tractor,_Cophill_Farm_vintage_rally_2012.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Andy Dingley"
+    },
+    {
+      "file": "stock-candidates/tractor-4.jpg",
+      "title": "File:1947 Field Marshall Series 2.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:1947_Field_Marshall_Series_2.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "David Merrett"
+    }
+  ],
+  "combine": [
+    {
+      "file": "stock-candidates/combine-1.jpg",
+      "title": "File:John Deere Combine Harvester Ebing 1811.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_Combine_Harvester_Ebing_1811.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Ermell"
+    },
+    {
+      "file": "stock-candidates/combine-2.jpg",
+      "title": "File:John Deere Combine Harvester Ebing 1799.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_Combine_Harvester_Ebing_1799.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Ermell"
+    },
+    {
+      "file": "stock-candidates/combine-3.jpg",
+      "title": "File:\u041a\u043e\u043c\u0431\u0430\u0458\u043d \u043a\u0430\u0458 \u0411\u0430\u0440\u0430\u043a\u043e\u0432\u043e.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:%D0%9A%D0%BE%D0%BC%D0%B1%D0%B0%D1%98%D0%BD_%D0%BA%D0%B0%D1%98_%D0%91%D0%B0%D1%80%D0%B0%D0%BA%D0%BE%D0%B2%D0%BE.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "\u0414\u0435\u0430\u043d \u041b\u0430\u0437\u0430\u0440\u0435\u0432\u0441\u043a\u0438"
+    },
+    {
+      "file": "stock-candidates/combine-4.jpg",
+      "title": "File:John Deere Combine Harvester Ebing 1828.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_Combine_Harvester_Ebing_1828.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Ermell"
+    }
+  ],
+  "planter": [
+    {
+      "file": "stock-candidates/planter-1.jpg",
+      "title": "File:John Deere Planter with Case IH Tractor.JPG",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_Planter_with_Case_IH_Tractor.JPG",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Kowloonese"
+    },
+    {
+      "file": "stock-candidates/planter-2.jpg",
+      "title": "File:Checkwire Spool on Mechanized Corn Planter.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Checkwire_Spool_on_Mechanized_Corn_Planter.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Todd Ehlers"
+    },
+    {
+      "file": "stock-candidates/planter-3.jpg",
+      "title": "File:Indiana Soybean Planting 2021 (20210513-NRCS-BJOC-0006).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Indiana_Soybean_Planting_2021_(20210513-NRCS-BJOC-0006).jpg",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "artist": "USDAgov"
+    },
+    {
+      "file": "stock-candidates/planter-4.jpg",
+      "title": "File:Indiana Soybean Planting 2021 (20210513-NRCS-BJOC-0007).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Indiana_Soybean_Planting_2021_(20210513-NRCS-BJOC-0007).jpg",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "artist": "USDAgov"
+    }
+  ],
+  "sprayer": [
+    {
+      "file": "stock-candidates/sprayer-1.jpg",
+      "title": "File:XAG sprayer robot, Agritechnica 2023, Hanover (P1160327).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:XAG_sprayer_robot,_Agritechnica_2023,_Hanover_(P1160327).jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "MB-one"
+    },
+    {
+      "file": "stock-candidates/sprayer-2.jpg",
+      "title": "File:John Deere 340 M, Agritechnica 2023, Hanover (P1140833-RR).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_340_M,_Agritechnica_2023,_Hanover_(P1140833-RR).jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "MB-one"
+    },
+    {
+      "file": "stock-candidates/sprayer-3.jpg",
+      "title": "File:Sprayer in a field - geograph.org.uk - 2313172.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Sprayer_in_a_field_-_geograph.org.uk_-_2313172.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Steve Daniels"
+    },
+    {
+      "file": "stock-candidates/sprayer-4.jpg",
+      "title": "File:Sprayer in a field - geograph.org.uk - 2313176.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Sprayer_in_a_field_-_geograph.org.uk_-_2313176.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Steve Daniels"
+    }
+  ],
+  "tillage": [
+    {
+      "file": "stock-candidates/tillage-1.jpg",
+      "title": "File:Tulip Dual Disc in front of Roterra power harrow - 4667.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Tulip_Dual_Disc_in_front_of_Roterra_power_harrow_-_4667.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "BulldozerD11"
+    },
+    {
+      "file": "stock-candidates/tillage-2.jpg",
+      "title": "File:Fendt 916 Vario, Amazone BBG Pegasus b.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Fendt_916_Vario,_Amazone_BBG_Pegasus_b.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "werktuigendagen"
+    },
+    {
+      "file": "stock-candidates/tillage-3.jpg",
+      "title": "File:Amazone BBG Pegasus.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Amazone_BBG_Pegasus.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "werktuigendagen"
+    },
+    {
+      "file": "stock-candidates/tillage-4.jpg",
+      "title": "File:Steyr 6195 CVT tractor, Werktuigendagen 2009.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Steyr_6195_CVT_tractor,_Werktuigendagen_2009.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "werktuigendagen"
+    }
+  ],
+  "hay-forage": [
+    {
+      "file": "stock-candidates/hay-forage-1.jpg",
+      "title": "File:D\u00fclmen, Hausd\u00fclmen, Kettbach -- 2015 -- 8499-503.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:D%C3%BClmen,_Hausd%C3%BClmen,_Kettbach_--_2015_--_8499-503.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Dietmar Rabich"
+    },
+    {
+      "file": "stock-candidates/hay-forage-2.jpg",
+      "title": "File:Bale - Voglje, \u0160en\u010dur.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Bale_-_Voglje,_%C5%A0en%C4%8Dur.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Mihael Grmek"
+    },
+    {
+      "file": "stock-candidates/hay-forage-3.jpg",
+      "title": "File:Round straw bales in Bavaria -01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Round_straw_bales_in_Bavaria_-01.jpg",
+      "license": "CC BY 3.0 de",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/de/deed.en",
+      "artist": "High Contrast"
+    },
+    {
+      "file": "stock-candidates/hay-forage-4.jpg",
+      "title": "File:Round straw bales in Bavaria -02.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Round_straw_bales_in_Bavaria_-02.jpg",
+      "license": "CC BY 3.0 de",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0/de/deed.en",
+      "artist": "High Contrast"
+    }
+  ],
+  "skid-steer": [
+    {
+      "file": "stock-candidates/skid-steer-1.jpg",
+      "title": "File:Bobcat T650 compact track loader (side view).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Bobcat_T650_compact_track_loader_(side_view).jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Dmitry Ivanov."
+    },
+    {
+      "file": "stock-candidates/skid-steer-2.jpg",
+      "title": "File:Moscow, Amkodor skid-steer loader, Dec 2025 01.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Moscow,_Amkodor_skid-steer_loader,_Dec_2025_01.jpg",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "artist": "Retired electrician"
+    },
+    {
+      "file": "stock-candidates/skid-steer-3.jpg",
+      "title": "File:Moscow, Amkodor skid-steer loader, Dec 2025 04.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Moscow,_Amkodor_skid-steer_loader,_Dec_2025_04.jpg",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "artist": "Retired electrician"
+    },
+    {
+      "file": "stock-candidates/skid-steer-4.jpg",
+      "title": "File:Moscow, Amkodor skid-steer loader, Dec 2025 03.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Moscow,_Amkodor_skid-steer_loader,_Dec_2025_03.jpg",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "artist": "Retired electrician"
+    }
+  ],
+  "attachment": [
+    {
+      "file": "stock-candidates/attachment-1.jpg",
+      "title": "File:Holder L 780.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Holder_L_780.jpg",
+      "license": "CC BY-SA 3.0 de",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
+      "artist": "Max Holder GmbH (user Holder Marketing)"
+    },
+    {
+      "file": "stock-candidates/attachment-2.jpg",
+      "title": "File:Counter-ISIS Train and Equip Fund (CTEF) Divestment, June 22, 2019 (2).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Counter-ISIS_Train_and_Equip_Fund_(CTEF)_Divestment,_June_22,_2019_(2).jpg",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "artist": "Sgt. Roger Jackson"
+    },
+    {
+      "file": "stock-candidates/attachment-3.jpg",
+      "title": "File:80-G-442225 (39617471051).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:80-G-442225_(39617471051).jpg",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "artist": "National Museum of the U.S. Navy"
+    },
+    {
+      "file": "stock-candidates/attachment-4.jpg",
+      "title": "File:80-G-442231 (24749327527).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:80-G-442231_(24749327527).jpg",
+      "license": "Public domain",
+      "licenseUrl": "",
+      "artist": "National Museum of the U.S. Navy"
+    }
+  ],
+  "construction": [
+    {
+      "file": "stock-candidates/construction-1.jpg",
+      "title": "File:Drilling rig and a digger at a construction site in Tuntorp.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Drilling_rig_and_a_digger_at_a_construction_site_in_Tuntorp.jpg",
+      "license": "CC BY 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+      "artist": "W.carter"
+    },
+    {
+      "file": "stock-candidates/construction-2.jpg",
+      "title": "File:Caterpillar 330 excavator on a pile of dirt.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Caterpillar_330_excavator_on_a_pile_of_dirt.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Matthew T Rader"
+    },
+    {
+      "file": "stock-candidates/construction-3.jpg",
+      "title": "File:Caterpillar 328D LCR at construction site in Sunnyvale.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Caterpillar_328D_LCR_at_construction_site_in_Sunnyvale.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Grendelkhan"
+    },
+    {
+      "file": "stock-candidates/construction-4.jpg",
+      "title": "File:Construction site excavator and truck.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Construction_site_excavator_and_truck.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Neb"
+    }
+  ],
+  "truck-trailer": [
+    {
+      "file": "stock-candidates/truck-trailer-1.jpg",
+      "title": "File:Flatbed semi-trailer truck, Russia.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Flatbed_semi-trailer_truck,_Russia.jpg",
+      "license": "CC0",
+      "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+      "artist": "Georg Pik"
+    },
+    {
+      "file": "stock-candidates/truck-trailer-2.jpg",
+      "title": "File:Innovia APM 300R on flatbed trailer with truck at DIA 2025-08-20.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Innovia_APM_300R_on_flatbed_trailer_with_truck_at_DIA_2025-08-20.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Xnatedawgx"
+    },
+    {
+      "file": "stock-candidates/truck-trailer-3.jpg",
+      "title": "File:Flatbed semi-truck trailer hauling recycling alongside Ford landscaping truck, I-90 westbound, Spokane, WA 2024.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Flatbed_semi-truck_trailer_hauling_recycling_alongside_Ford_landscaping_truck,_I-90_westbound,_Spokane,_WA_2024.jpg",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Ewkada"
+    },
+    {
+      "file": "stock-candidates/truck-trailer-4.jpg",
+      "title": "File:Robsons of Carlisle 1970 Foden truck with flatbed trailer, 2 July 1995.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Robsons_of_Carlisle_1970_Foden_truck_with_flatbed_trailer,_2_July_1995.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "bilbobagweed"
+    }
+  ],
+  "other": [
+    {
+      "file": "stock-candidates/other-1.jpg",
+      "title": "File:Tractor John Deere 6320 with front and rear mower cutting grass.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:Tractor_John_Deere_6320_with_front_and_rear_mower_cutting_grass.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Petar Milo\u0161evi\u0107"
+    },
+    {
+      "file": "stock-candidates/other-2.jpg",
+      "title": "File:John Deere 1550 (& John Deere 6410).jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_1550_(%26_John_Deere_6410).jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "JoachimKohler-HB"
+    },
+    {
+      "file": "stock-candidates/other-3.jpg",
+      "title": "File:John Deere 6310.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_6310.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "JoachimKohler-HB"
+    },
+    {
+      "file": "stock-candidates/other-4.jpg",
+      "title": "File:John Deere 2850 in Bayern.jpg",
+      "page": "https://commons.wikimedia.org/wiki/File:John_Deere_2850_in_Bayern.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "JoachimKohler-HB"
+    }
+  ]
+}
