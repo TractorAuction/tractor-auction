@@ -11,6 +11,9 @@ const TOPICS: Record<string, string> = {
   account: "My account",
 }
 
+/** Nobody fills in name, email and a message this fast. */
+const MIN_FILL_MS = 3000
+
 function text(value: FormDataEntryValue | null, max: number) {
   return typeof value === "string" ? value.trim().slice(0, max) : ""
 }
@@ -28,9 +31,17 @@ function escapeHtml(value: string) {
  * reply-to so answering it is a plain reply. Nothing is stored.
  */
 export async function sendContactMessage(formData: FormData) {
-  // Honeypot: hidden from people, filled in by form-spamming bots. Pretend it
-  // worked so they move on.
-  if (text(formData.get("company_website"), 200)) redirect("/contact?sent=1")
+  // Spam traps. Pretend it worked so bots move on.
+  // Honeypot: an off-screen field people never see, filled in by bots.
+  if (text(formData.get("website"), 200) || text(formData.get("company_website"), 200)) {
+    redirect("/contact?sent=1")
+  }
+  // Time trap: the page stamps when the form was shown. A missing stamp or a
+  // submit within a few seconds of loading is a script, not a person typing.
+  const started = Number(text(formData.get("form_started"), 20))
+  if (!Number.isFinite(started) || started <= 0 || Date.now() - started < MIN_FILL_MS) {
+    redirect("/contact?sent=1")
+  }
 
   const name = text(formData.get("name"), 200)
   const email = text(formData.get("email"), 320)

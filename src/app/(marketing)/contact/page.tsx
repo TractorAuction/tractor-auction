@@ -47,6 +47,11 @@ function Field({
   )
 }
 
+/** Server time the form was rendered, checked by the time trap in actions.ts. */
+function formShownAt() {
+  return Date.now()
+}
+
 export default async function ContactPage(props: PageProps<"/contact">) {
   const params = await props.searchParams
   const sent = params.sent === "1"
@@ -119,12 +124,15 @@ export default async function ContactPage(props: PageProps<"/contact">) {
         </Field>
 
         {/* Honeypot for bots; hidden from people and screen readers. */}
-        <div aria-hidden className="hidden">
+        {/* Spam traps. The field sits off screen rather than display:none,
+            because many bots skip fields that are hidden that way. */}
+        <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
           <label>
-            Leave this empty
-            <input name="company_website" tabIndex={-1} autoComplete="off" />
+            Website
+            <input name="website" type="text" tabIndex={-1} autoComplete="off" />
           </label>
         </div>
+        <input type="hidden" name="form_started" value={formShownAt()} />
 
         <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
           <Button type="submit" size="lg">
