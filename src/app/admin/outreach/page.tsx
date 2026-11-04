@@ -1,4 +1,4 @@
-import { BellRing, Download, Search, X } from "lucide-react"
+import { BellRing, Download, Search, Send, X } from "lucide-react"
 import Link from "next/link"
 
 import { OutreachRow } from "@/components/admin/outreach-row"
@@ -93,15 +93,29 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
             <span className="font-medium text-foreground">Details</span> and update the status.
           </p>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={<Link href="/api/outreach/export" prefetch={false} />}
-        >
-          <Download />
-          Export CSV
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            nativeButton={false}
+            render={
+              <Link
+                href={`/admin/outreach/batch?type=${readyCount === 0 && dueCount > 0 ? "follow_up" : "first_contact"}`}
+              />
+            }
+          >
+            <Send />
+            Batch email
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            nativeButton={false}
+            render={<Link href="/api/outreach/export" prefetch={false} />}
+          >
+            <Download />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Pipeline summary — each card is a filter */}
@@ -150,7 +164,16 @@ export default async function AdminOutreachPage(props: PageProps<"/admin/outreac
       {/* Where to start */}
       {!anyFilter && (readyCount > 0 || missingEmail > 0) && (
         <p className="rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">{readyCount} ready to email</span>
+          {readyCount > 0 ? (
+            <Link
+              href="/admin/outreach/batch?type=first_contact"
+              className="font-medium text-primary hover:underline"
+            >
+              {readyCount} ready to email
+            </Link>
+          ) : (
+            <span className="font-medium text-foreground">0 ready to email</span>
+          )}
           {missingEmail > 0 && (
             <>
               {" "}· {missingEmail} still need a contact email (find it on the company&apos;s own
