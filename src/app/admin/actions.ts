@@ -278,10 +278,14 @@ export async function updateOutreachContact(formData: FormData) {
     notes: text(formData.get("notes")),
   }
 
-  if (status) {
+  // Only stamp dates when the status actually moved. Saving notes on a row that
+  // is already "responded" must not reset when they replied.
+  const previous = text(formData.get("previous_status"))
+  if (status && status !== previous) {
     payload.status = status
-    // Stamp the date the pipeline moved, so follow-up reporting has a clock.
-    if (status === "responded") payload.response_date = new Date().toISOString()
+    const now = new Date().toISOString()
+    if (status === "contacted") payload.outreach_date = now
+    if (status === "responded") payload.response_date = now
   }
 
   await supabase.from("outreach_contacts").update(payload).eq("id", id)
