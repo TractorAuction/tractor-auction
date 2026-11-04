@@ -49,16 +49,22 @@ export function OutreachBatch({
 
   // Two rows can share one inbox (Ritchie Bros. and IronPlanet). Only the
   // first row for an address is offered; the rest are shown but locked.
-  const sharedWith = useMemo(() => {
+  // The first row's email names the others and advances them too.
+  const { sharedWith, covers } = useMemo(() => {
     const firstByEmail = new Map<string, OutreachContact>()
     const shared = new Map<string, string>()
+    const covered = new Map<string, OutreachContact[]>()
     for (const contact of contacts) {
       const key = contact.contact_email!.trim().toLowerCase()
       const first = firstByEmail.get(key)
-      if (first) shared.set(contact.id, first.company_name)
-      else firstByEmail.set(key, contact)
+      if (first) {
+        shared.set(contact.id, first.company_name)
+        covered.set(first.id, [...(covered.get(first.id) ?? []), contact])
+      } else {
+        firstByEmail.set(key, contact)
+      }
     }
-    return shared
+    return { sharedWith: shared, covers: covered }
   }, [contacts])
 
   const [selected, setSelected] = useState<Set<string>>(
@@ -88,7 +94,11 @@ export function OutreachBatch({
       const response = await fetch("/api/outreach/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: contact.id, stageId }),
+        body: JSON.stringify({
+          contactId: contact.id,
+          stageId,
+          alsoCovers: (covers.get(contact.id) ?? []).map((other) => other.company_name),
+        }),
       })
       const payload = await response.json()
       if (payload.error) throw new Error(payload.error)
@@ -133,6 +143,7 @@ export function OutreachBatch({
             to: draft.to.trim(),
             subject: draft.subject,
             body: draft.body,
+            alsoContactIds: (covers.get(contact.id) ?? []).map((other) => other.id),
           }),
         })
         const payload = await response.json()
@@ -220,6 +231,8 @@ export function OutreachBatch({
                     <span className="text-xs text-muted-foreground">
                       {contact.contact_email}
                       {shared && ` · same address as ${shared}, so one email covers both`}
+                      {covers.has(contact.id) &&
+                        ` · also covers ${covers.get(contact.id)!.map((o) => o.company_name).join(", ")}`}
                     </span>
                   </div>
                   <Badge tone={STATUS_META[contact.status].tone}>
@@ -303,7 +316,9 @@ export function OutreachBatch({
           <ul className="flex flex-col gap-0.5 text-sm text-foreground">
             {approved.map((contact) => (
               <li key={contact.id}>
-                {contact.company_name}{" "}
+                {contact.company_name}
+                {covers.has(contact.id) &&
+                  ` + ${covers.get(contact.id)!.map((o) => o.company_name).join(", ")}`}{" "}
                 <span className="text-muted-foreground">→ {drafts[contact.id].to.trim()}</span>
               </li>
             ))}
@@ -336,7 +351,14 @@ export function OutreachBatch({
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-semibold text-foreground">{contact.company_name}</span>
+                <span className="font-semibold text-foreground">
+                  {contact.company_name}
+                  {covers.has(contact.id) && (
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      + {covers.get(contact.id)!.map((o) => o.company_name).join(", ")}
+                    </span>
+                  )}
+                </span>
                 <span className="flex items-center gap-1.5 text-xs">
                   {state.phase === "drafting" && (
                     <><Loader2 className="size-3.5 animate-spin" /> Writing…</>

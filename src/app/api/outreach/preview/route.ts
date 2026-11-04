@@ -19,6 +19,8 @@ export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as {
     contactId?: string
     stageId?: string
+    /** Other companies at the same inbox; the email must name them too. */
+    alsoCovers?: string[]
   } | null
 
   if (!body?.contactId || !body.stageId) {
@@ -40,10 +42,13 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const email = await generateOutreachEmail(
-      mapOutreachContact(data as Record<string, unknown>),
-      body.stageId
-    )
+    const contact = mapOutreachContact(data as Record<string, unknown>)
+    const others = (body.alsoCovers ?? []).map((name) => name.trim()).filter(Boolean).slice(0, 5)
+    if (others.length > 0) {
+      // The prompt names every business listed in the company name.
+      contact.company_name = `${contact.company_name} (including ${others.join(" and ")})`
+    }
+    const email = await generateOutreachEmail(contact, body.stageId)
     return NextResponse.json({ data: email, error: null })
   } catch (error) {
     console.error("[api/outreach/preview]", error)

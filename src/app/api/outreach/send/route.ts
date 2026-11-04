@@ -28,6 +28,8 @@ export async function POST(request: NextRequest) {
     followUpDays?: number
     /** Set only after the admin has confirmed a second email to the same address. */
     allowDuplicate?: boolean
+    /** Other rows this one email also covers (same inbox); they advance too. */
+    alsoContactIds?: string[]
   } | null
 
   if (!body?.contactId || !body.to || !body.subject || !body.body) {
@@ -53,6 +55,13 @@ export async function POST(request: NextRequest) {
 
   const supabase = createAdminClient()
 
+  // Validated so they can be dropped into a PostgREST filter safely.
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  const alsoIds = (body.alsoContactIds ?? []).filter((id) => UUID.test(id) && id !== body.contactId)
+  if (!UUID.test(body.contactId)) {
+    return NextResponse.json({ data: null, error: "Invalid contactId" }, { status: 400 })
+  }
+
   // Two CRM rows can share one inbox (Ritchie Bros. owns IronPlanet and both
   // list the same person). A second cold email to someone we just contacted
   // reads as spam, so it needs an explicit confirmation.
@@ -62,7 +71,7 @@ export async function POST(request: NextRequest) {
       .from("outreach_contacts")
       .select("company_name")
       .ilike("contact_email", body.to.trim())
-      .neq("id", body.contactId)
+      .not("id", "in", `(${[body.contactId, ...alsoIds].join(",")})`)
       .gte("outreach_date", since)
       .limit(1)
 
@@ -107,6 +116,20 @@ export async function POST(request: NextRequest) {
       follow_up_date: followUp.toISOString(),
     })
     .eq("id", body.contactId)
+
+  // Only rows that really share this inbox, so the field can't be used to
+  // mark arbitrary companies as contacted.
+  if (alsoIds.length > 0) {
+    await supabase
+      .from("outreach_contacts")
+      .update({
+        status: "contacted",
+        outreach_date: now.toISOString(),
+        follow_up_date: followUp.toISOString(),
+      })
+      .in("id", alsoIds)
+      .ilike("contact_email", body.to.trim())
+  }
 
   return NextResponse.json({ data: { id: data?.id ?? null }, error: null })
 }
