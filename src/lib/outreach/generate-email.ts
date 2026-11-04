@@ -18,12 +18,16 @@ auctions in the United States. It aggregates listings from auction companies so
 buyers can search one place, then sends those buyers to the original auction site
 to bid.
 
-What this means for an auction company:
-- We send them qualified buyers who are actively searching for tractors
-- We never accept bids ourselves; every transaction happens on their own site
-- We increase listing visibility beyond their existing audience
+What this means for an auction company (these are the ONLY benefits you may state):
+- People searching TractorAuction.com see their listings alongside other auctions
+- Every click goes to their own listing page; bidding happens only on their site
+- We never accept bids ourselves and do not compete with auction companies
+- It is another place their listings can be found, in addition to their own site
 - Listing on TractorAuction.com is free for auction companies
 - We only need authorized data access: API, RSS, XML, CSV, or any feed they have
+
+The platform is new. We have no traffic, audience, or buyer figures to share, so
+describe what the platform does, never how big, busy, or effective it is.
 
 RULES FOR EVERY EMAIL
 - Address the company by name. Never use a generic greeting.
@@ -48,6 +52,18 @@ RULES FOR EVERY EMAIL
 - Write as "we" throughout. Never "I".
 - Never claim a track record: no "we have found", no results for other
   partners, no testimonials. The platform is new; describe what it does.
+- Never describe our users or audience: no "qualified buyers", "active buyers",
+  "actively searching", "serious bidders", "national audience", "our buyers",
+  "buyer volume", "traffic", or "reach". Say "people searching for equipment"
+  or "anyone searching our site" instead.
+- Never promise results: no more bidders, more traffic, higher prices, better
+  recovery, or "incremental" anything. Say their listings can be found in one
+  more place, nothing stronger.
+- Never promise what the integration will cost them in effort: no "no work on
+  your part", "no maintenance", "easy setup", or "takes minutes". Just ask what
+  they can share.
+- If the company name lists more than one business (for example "X (including
+  Y)"), name every business in the email.
 - Sign off exactly as: The TractorAuction.com Partnership Team
 
 Return your answer in exactly this shape, with nothing before or after:

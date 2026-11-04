@@ -33,35 +33,35 @@ export const OUTREACH_ANGLES: Record<OutreachAngleId, OutreachAngle> = {
     id: "tier1_platform",
     name: "Tier 1 — large platform",
     lead:
-      "Lead with traffic and buyer volume: we send qualified, actively searching buyers " +
-      "straight to their listings. They are large enough to care about incremental " +
-      "bidder reach, and likely already have data infrastructure.",
+      "Lead with one more place their listings can be found: people searching many " +
+      "auction sources at once see their machines, and every click goes to their own " +
+      "listing page. They likely already have a feed or API, so ask for that.",
     defaultAsk: "an official API or XML/JSON feed",
   },
   regional: {
     id: "regional",
     name: "Tier 2/3 — regional auctioneer",
     lead:
-      "Lead with expanded reach: get their listings in front of national buyers they " +
-      "would never reach on their own. They keep full control of the auction and the " +
-      "buyer relationship, and it costs them nothing.",
+      "Lead with being findable beyond their own site: people searching across many " +
+      "auctions in one place can find their listings too. They keep full control of " +
+      "the auction and the buyer relationship, and it costs them nothing.",
     defaultAsk: "a CSV export, RSS feed, or manual submission through our Partner Center",
   },
   government: {
     id: "government",
     name: "Tier 4 — government / municipal",
     lead:
-      "Lead with public visibility and transparency: more eyes on surplus sales means " +
-      "better recovery for the public body, and the data is already public.",
+      "Lead with public visibility and transparency: surplus sales become findable in " +
+      "one more place, and the data is already public.",
     defaultAsk: "a public API, RSS feed, or authorized data export",
   },
   software_provider: {
     id: "software_provider",
     name: "Tier 5 — auction software provider",
     lead:
-      "Lead with leverage: one integration on their end connects every auction company " +
-      "running on their platform to a national audience. Frame it as value they can pass " +
-      "on to their own clients, not just to us.",
+      "Lead with leverage: one integration makes listings from every auction company " +
+      "running on their software searchable on our site. Frame it as something they can " +
+      "offer their own clients, not just a favour to us.",
     defaultAsk:
       "a partner API or white-label data feed covering their client auction companies",
   },
@@ -81,8 +81,9 @@ export const OUTREACH_ANGLES: Record<OutreachAngleId, OutreachAngle> = {
     id: "international",
     name: "Tier 7 — international",
     lead:
-      "Lead with access to US buyers for the inventory they already ship or sell " +
-      "internationally. Keep it exploratory; this is a Phase 2 conversation.",
+      "Lead with US visibility for inventory they already ship or sell internationally: " +
+      "people in the US searching our site could find it. Keep it exploratory; this is " +
+      "a Phase 2 conversation.",
     defaultAsk: "an international data feed or API covering US-relevant inventory",
   },
 }

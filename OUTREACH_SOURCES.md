@@ -26,7 +26,7 @@ When generating an outreach email, always follow these rules:
 - Keep the email under 200 words
 - Professional tone, no dashes, no emojis
 - Sign off as: The TractorAuction.com Partnership Team
-- For Tier 1 large platforms, lead with traffic and buyer volume value
+- For Tier 1 large platforms, lead with one more place their listings can be found (no traffic or buyer-volume claims: the platform is new)
 - For regional auctioneers, lead with expanded reach beyond their local area
 - For government sources, lead with public visibility and transparency
 - For software providers, lead with the potential to unlock all their client auction companies at once through a single integration
@@ -38,7 +38,7 @@ When generating an outreach email, always follow these rules:
 TractorAuction.com is building the leading search and discovery platform for agricultural equipment auctions.
 
 What this means for auction companies:
-- We send them qualified buyers who are actively searching for tractors
+- People searching TractorAuction.com can find their listings, and every click goes to their own listing page
 - We never accept bids ourselves, all transactions happen on the original auction site
 - We increase their listing visibility beyond their existing audience
 - Listing on TractorAuction.com is free for auction companies
@@ -95,7 +95,7 @@ Angle: Expanded buyer reach beyond their local or regional audience.
 
 Smaller regional companies. Thousands of annual tractor listings collectively.
 Request: CSV or spreadsheet export, manual submission, or RSS if available.
-Angle: Get their listings in front of national buyers they would never reach on their own.
+Angle: Make their listings findable beyond their own site, by people searching across many auctions in one place.
 
 | Company | URL |
 |---|---|
