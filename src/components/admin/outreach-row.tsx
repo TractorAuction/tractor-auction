@@ -28,7 +28,9 @@ export function OutreachRow({ contact }: { contact: OutreachContact }) {
   const [panel, setPanel] = useState<"email" | "edit" | null>(null)
   const status = STATUS_META[contact.status]
   const step = nextStep(contact)
-  const needsEmail = !contact.contact_email
+  // Only a company we still have to contact is blocked on an address. GSA-style
+  // rows (feed already received) shouldn't push "Add email" as the next action.
+  const needsEmail = !contact.contact_email && contact.status === "pending"
 
   function toggle(next: "email" | "edit") {
     setPanel((current) => (current === next ? null : next))
