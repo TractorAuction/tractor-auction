@@ -1,4 +1,5 @@
 import { fetchFeed } from "../fetch"
+import { cacheImages, type ImageToCache } from "../image-cache"
 import { LOGISTICS_NOISE } from "../normalize"
 import type { Connector, ConnectorContext, RawItem } from "../types"
 
@@ -31,7 +32,7 @@ import type { Connector, ConnectorContext, RawItem } from "../types"
 export const gsaAuctionsConnector: Connector = {
   name: "gsa-auctions",
 
-  async fetchItems({ source, config }: ConnectorContext) {
+  async fetchItems({ source, config, deadline }: ConnectorContext) {
     const url = config.url ?? "https://api.gsa.gov/assets/gsaauctions/v2/auctions"
 
     const keyEnv = config.authHeaderEnv ?? "GSA_AUCTIONS_API_KEY"
@@ -66,6 +67,7 @@ export const gsaAuctionsConnector: Connector = {
     }
 
     const items: RawItem[] = []
+    const photos: ImageToCache[] = []
     let skippedIrrelevant = 0
 
     for (const entry of results) {
@@ -102,18 +104,30 @@ export const gsaAuctionsConnector: Connector = {
         current_bid: numberText(lot.highBidAmount),
         hours: extractHours(description),
         horsepower: extractHorsepower(description),
-        // lot.imageURL is NOT a usable public image: it 401s with "Token
-        // expired or invalid, please login again" even when authenticated
-        // with the same api.data.gov key that successfully reads /auctions.
-        // It's an internal PPMS endpoint that needs a logged-in GSA session,
-        // which the public API has no mechanism to grant a third party. GSA's
-        // own API response exposes a URL it doesn't actually make public —
-        // confirmed against the live endpoint, not assumed. Omitted entirely
-        // rather than stored and left to 401 in the browser: a listing with
-        // no real photo should say so, not show a broken image.
+        // lot.imageURL is cached below, not stored as-is: GSA says it is not
+        // a public endpoint (a browser gets 401), but that we may download
+        // and cache the photos. See lib/ingestion/image-cache.ts.
         original_url: str(lot.itemDescURL),
       })
+
+      const imageUrl = str(lot.imageURL)
+      if (imageUrl && /^https:\/\//i.test(imageUrl)) {
+        photos.push({ externalId: `${saleNo}-${lotNo}`, url: imageUrl })
+      }
     }
+
+    // Only the ag lots that survived the filter above, so a handful of photos
+    // per run rather than GSA's whole catalogue. A lot whose photo is not
+    // cached yet keeps its stock photo until a later run stores it.
+    const cached = await cacheImages("gsa", photos, { deadline })
+    for (const item of items) {
+      const url = cached.urls.get(item.external_id as string)
+      if (url) item.images = url
+    }
+    console.log(
+      `[gsa-auctions] photos: ${cached.urls.size} of ${photos.length} cached (${cached.downloaded} new this run)`
+    )
+    for (const error of cached.errors.slice(0, 5)) console.warn("[gsa-auctions] photo:", error)
 
     if (skippedIrrelevant > 0) {
       console.log(

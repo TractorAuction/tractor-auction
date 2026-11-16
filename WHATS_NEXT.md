@@ -12,7 +12,7 @@ Replaces the status sections of `NEXT_STEPS.md`, which was last updated 2026-09-
 | Site | Up, HTTPS, apex redirects to `www` | ✅ |
 | Listings | **11 active** (78 total, all statuses) | 🟡 thin |
 | Sources | **1 live source: GSA Auctions**. Homepage says "1 Source" | 🔴 SOW needs real data from ≥3 |
-| GSA sync | Last run Nov 16, 8:13 AM CST, marked **partial** with a **"404: Not Found"** error | 🔴 investigate |
+| GSA sync | Listings sync fine. Marked **partial** only because the **Meilisearch** step 404s (see §3.1). Site search falls back to Postgres, so visitors are unaffected | 🟡 |
 | Other sources | AuctionTime, BigIron, Purple Wave, Ritchie Bros: pending, never synced. Partner Feed (CSV): active, 0 listings | ⏳ waiting on outreach |
 | Recent results | Real GSA closing prices on the homepage (Nov 10–13) | ✅ historical data works |
 | Outreach | **All 11 Tier 1 emailed Nov 14**, follow-ups due **Nov 21**. 0 replies so far. 60 companies have no contact email | 🟡 |
@@ -57,8 +57,13 @@ This looks like an email-bombing or list-validation attack that uses our forms a
 
 The SOW requires live data from **at least 3 authorized sources**. Today there is 1.
 
-1. [ ] **Fix the GSA 404.** The sync is "partial", so one of its endpoints is returning 404. Find which one
-       in the per-run error log and fix it. GSA is the only live data, so it can't break.
+1. [ ] **Meilisearch is gone.** The "404: Not Found" on every GSA sync is the search-index step, not GSA.
+       Even `POST /api/ingest/search-reindex` returns 404, so the `MEILISEARCH_HOST` on Vercel no longer
+       answers (likely the Meilisearch Cloud project was deleted or its trial ended). Either create a new
+       Meilisearch project, update `MEILISEARCH_HOST` / `MEILISEARCH_API_KEY` / the `NEXT_PUBLIC_` pair on
+       Vercel and run the reindex, or drop Meilisearch and stay on Postgres search (decision D1 in `NEXT_STEPS.md`).
+       [x] GSA photos: GSA confirmed (Nov 16) we may download and cache them. The connector now stores them
+       in Supabase Storage (`listing-photos` bucket) and listings show the real photo.
 2. [ ] **Outreach follow-up on Nov 21** for all 11 Tier 1 companies (the CRM marks them due).
 3. [ ] Check the partnerships inbox daily for replies. Update each company's status in the CRM when they reply.
 4. [ ] Start Tier 2 (13 farm auction companies). Find each contact email on the company's own contact page,
@@ -80,8 +85,7 @@ The SOW requires live data from **at least 3 authorized sources**. Today there i
 - [ ] #12: trigger an alert manually and confirm the email arrives
 - [ ] #13: compare tool on mobile
 - [ ] #4: audit all current outbound links by hand (only 11 right now, so it's quick)
-- [ ] #7: confirm images flow through on a live sync. GSA photos return 401 (we asked GSA for access on Nov 14),
-       so stock photos stay for now
+- [x] #7: GSA photos are cached at sync time and show on listings (Nov 16)
 - [ ] #20: Troy's Terms and Privacy text went in on Oct 11 (commit "owner's Terms and Conditions…").
        Confirm with Troy and tick it off
 
