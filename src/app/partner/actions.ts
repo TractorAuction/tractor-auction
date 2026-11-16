@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache"
 import { canonicalCategory, canonicalMake, canonicalState, parseImages } from "@/lib/ingestion/normalize"
 import { TERMS_VERSION } from "@/content/legal/version"
 import { getCurrentPartner } from "@/lib/partners/current"
+import { screenSubmission } from "@/lib/security/form-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -31,6 +32,21 @@ export async function submitPartnerApplication(formData: FormData) {
   if (formData.get("accept_terms") !== "on") {
     redirect("/partner/register?error=terms")
   }
+
+  // Screened silently: a bot sees the normal "Application received" page,
+  // but nothing reaches the admin queue.
+  const screen = await screenSubmission(formData, {
+    form: "partner-register",
+    email: contactEmail,
+    textFields: [
+      "company_name",
+      "contact_name",
+      "geographic_coverage",
+      "inventory_type",
+      "listings_per_month",
+    ],
+  })
+  if (!screen.ok) redirect("/partner/register?submitted=1")
 
   const supabase = await createClient()
   const {

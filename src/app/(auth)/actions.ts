@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 import { TERMS_VERSION } from "@/content/legal/version"
+import { screenSubmission } from "@/lib/security/form-guard"
 import { SITE_URL } from "@/lib/seo/slug"
 import { createClient } from "@/lib/supabase/server"
 
@@ -54,6 +55,16 @@ export async function signUp(formData: FormData) {
       `/register?error=${encodeURIComponent("Please accept the Terms and Conditions and Privacy Policy.")}`
     )
   }
+
+  // Bots post here with real people's addresses, which makes Supabase send
+  // them a confirmation email from our domain. Show the normal "check your
+  // email" page so the script learns nothing, and send nothing.
+  const screen = await screenSubmission(formData, {
+    form: "register",
+    email,
+    textFields: ["full_name"],
+  })
+  if (!screen.ok) redirect("/register?check_email=1")
 
   const supabase = await createClient()
 

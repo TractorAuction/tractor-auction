@@ -1,3 +1,4 @@
+import { withBotId } from "botid/next/config";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
@@ -15,4 +16,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// withBotId adds the proxy rewrites the BotID browser challenge loads through.
+export default withBotId(nextConfig);

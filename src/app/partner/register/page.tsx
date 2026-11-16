@@ -4,6 +4,7 @@ import Link from "next/link"
 
 import { submitPartnerApplication } from "@/app/partner/actions"
 import { TermsCheckbox } from "@/components/account/terms-checkbox"
+import { BotTraps } from "@/components/forms/bot-traps"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
@@ -141,6 +142,7 @@ export default async function PartnerRegisterPage(props: PageProps<"/partner/reg
         </Field>
 
         <div className="flex flex-col gap-3 sm:col-span-2">
+          <BotTraps />
           <TermsCheckbox />
           <Button type="submit" size="lg" className="w-fit">
             Submit application
