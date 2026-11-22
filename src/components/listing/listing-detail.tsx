@@ -1,6 +1,7 @@
 import {
   Calendar,
   ChevronRight,
+  Clock,
   Cog,
   ExternalLink,
   Gauge,
@@ -19,12 +20,13 @@ import { ListingActions } from "@/components/listing/listing-actions"
 import { ListingGallery } from "@/components/listing/listing-gallery"
 import { Button } from "@/components/ui/button"
 import {
+  formatAuctionEnd,
   formatCurrency,
   formatDate,
-  formatDateTime,
   formatLocation,
   formatNumber,
   formatRelativeTime,
+  isDateOnlyEnd,
 } from "@/lib/format"
 import { effectiveStatus } from "@/lib/listings/status"
 import { findCategory } from "@/lib/seo/slug"
@@ -50,6 +52,10 @@ export function ListingDetail({
   const clickUrl = `/api/click?listingId=${encodeURIComponent(listing.id)}`
   const status = effectiveStatus(listing)
   const updated = formatRelativeTime(listing.last_synced_at ?? listing.updated_at)
+  const sourceName = listing.source?.name ?? "the auction site"
+  // Some sources (GSA) publish only the closing date. A countdown would run
+  // to a guessed time, so show the date and point to the exact time instead.
+  const dateOnlyEnd = isDateOnlyEnd(listing.auction_end_date)
 
   const quickSpecs = [
     { icon: Gauge, label: "Horsepower", value: listing.horsepower ? `${listing.horsepower} HP` : null },
@@ -205,8 +211,27 @@ export function ListingDetail({
               )}
             </div>
 
-            {listing.auction_end_date && status === "active" && (
+            {listing.auction_end_date && status === "active" && !dateOnlyEnd && (
               <AuctionCountdown endDate={listing.auction_end_date} />
+            )}
+
+            {listing.auction_end_date && status === "active" && dateOnlyEnd && (
+              <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+                  <Clock className="size-4" /> Closes {formatDate(listing.auction_end_date)}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {sourceName} lists the closing date only. Check the exact closing time on{" "}
+                  <a
+                    href={clickUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="underline hover:text-foreground">
+                    {sourceName}
+                  </a>{" "}
+                  before you bid. Lots may also extend on late bids.
+                </span>
+              </div>
             )}
 
             {listing.auction_end_date && (
@@ -215,7 +240,7 @@ export function ListingDetail({
                   {status === "active" ? "Auction ends" : "Auction ended"}
                 </span>
                 <span className="text-right font-medium text-foreground">
-                  {formatDateTime(listing.auction_end_date)}
+                  {formatAuctionEnd(listing.auction_end_date)}
                 </span>
               </div>
             )}
